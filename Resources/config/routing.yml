@@ -1,0 +1,4 @@
+translator_controller:
+    resource: "@ClarolineTranslatorBundle/Controller/TranslatorController.php"
+    type: annotation
+    prefix: /
