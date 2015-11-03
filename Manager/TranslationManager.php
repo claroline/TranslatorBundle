@@ -55,12 +55,13 @@ class TranslationManager
     	}
 
     	$this->om->flush();
+        /* Not working properly
     	$this->log('Removing commit from config file...');
 
 	    if ($configs = file_exists($this->gitConfig)) {
 	    	unset($configs[$vendor . $bundle]);
-	    	file_put_contents($this->gitConfig, Yaml::dump($configs));
-	    }
+	    	file_put_contents($this->gitConfig, Yaml::dump($configs, 2));
+	    }*/
     }
 
     public function init($vendor, $bundle)
@@ -70,10 +71,11 @@ class TranslationManager
         $iterator = new \DirectoryIterator($this->getTranslationsDirectory($vendor . $bundle));
         $commit = $this->getCurrentCommit($vendor . $bundle);
         $configs = file_exists($this->gitConfig) ? Yaml::parse($this->gitConfig): array();
+        if ($configs === true) $configs = array();
         $configs[$vendor . $bundle] = $commit;
 
-        if (!file_put_contents($this->gitConfig, Yaml::dump($configs))) {
-        	$this->log("Couldn't add git config !!!", LogLevel::DEBUG);
+        if (!file_put_contents($this->gitConfig, Yaml::dump($configs, 2))) {
+        	$this->log("Couldn't add git config in " . $this->gitConfig . " !!!", LogLevel::DEBUG);
         }
 
         $this->log('Setting up database...');
@@ -114,7 +116,7 @@ class TranslationManager
 
     private function getCurrentCommit($fqcn)
     {
-    	return file_get_contents($this->gitDirectory . $fqcn . '/.git/refs/heads/master');
+    	return rtrim(file_get_contents($this->gitDirectory . $fqcn . '/.git/refs/heads/master'));
     }
 
     private function getTranslationsDirectory($fqcn)

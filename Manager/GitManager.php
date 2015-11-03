@@ -27,16 +27,19 @@ class GitManager
     /**
      * @DI\InjectParams({
      *     "gitDirectory"       = @DI\Inject("%claroline.param.git_directory%"),
-     *     "translationManager" = @DI\Inject("claroline.translation.manager.translation_manager")
+     *     "translationManager" = @DI\Inject("claroline.translation.manager.translation_manager"),
+     *     "gitConfig"          = @DI\Inject("%claroline.param.git_config%")
      * })
      */
     public function __construct(
         $gitDirectory, 
-        TranslationManager $translationManager
+        TranslationManager $translationManager,
+        $gitConfig
     )
     {
         $this->gitDirectory       = $gitDirectory;
         $this->translationManager = $translationManager;
+        $this->gitConfig          = $gitConfig;
     }
 
     public function add($language)
