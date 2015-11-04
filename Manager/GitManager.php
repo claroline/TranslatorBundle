@@ -16,6 +16,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use JMS\DiExtraBundle\Annotation as DI;
 use Claroline\CoreBundle\Library\Utilities\FileSystem;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * @DI\Service("claroline.translation.manager.git_manager")
@@ -28,18 +29,21 @@ class GitManager
      * @DI\InjectParams({
      *     "gitDirectory"       = @DI\Inject("%claroline.param.git_directory%"),
      *     "translationManager" = @DI\Inject("claroline.translation.manager.translation_manager"),
-     *     "gitConfig"          = @DI\Inject("%claroline.param.git_config%")
+     *     "gitConfig"          = @DI\Inject("%claroline.param.git_config%"),
+     *     "repositories"       = @DI\Inject("%claroline.param.git_repositories%")
      * })
      */
     public function __construct(
         $gitDirectory, 
         TranslationManager $translationManager,
-        $gitConfig
+        $gitConfig,
+        $repositories
     )
     {
         $this->gitDirectory       = $gitDirectory;
         $this->translationManager = $translationManager;
         $this->gitConfig          = $gitConfig;
+        $this->repositories       = $repositories;
     }
 
     public function add($language)
@@ -70,6 +74,7 @@ class GitManager
             return false;
         } 
 
+        $this->addRepository($vendor, $bundle);     
         $workingDir = $this->gitDirectory . $vendor . $bundle;
         $repo = 'https://github.com/' . $vendor . '/' . $bundle .'.git';
         $fs = new FileSystem();
@@ -100,6 +105,7 @@ class GitManager
         $this->log('Removing ' . $workingDir . '...', LogLevel::DEBUG);
         $fs->rmdir($workingDir, true);
         $this->translationManager->clear($vendor, $bundle);
+        $this->removeRepository($vendor, $bundle);
     }
 
     public function exists($vendor, $bundle)
@@ -127,5 +133,26 @@ class GitManager
     {
         $this->logger = $logger;
         $this->translationManager->setLogger($logger);
+    }
+
+    public function addRepository($vendor, $bundle)
+    {
+        $repositories = file_exists($this->repositories) ? Yaml::parse($this->repositories): array();
+        if ($repositories === true) $configs = array();
+        $repositories[$vendor . $bundle] = array($vendor => $bundle);
+
+        if (!file_put_contents($this->repositories, Yaml::dump($repositories, 2))) {
+            $this->log("Couldn't add git config in " . $this->repositories . " !!!", LogLevel::DEBUG);
+        }
+    }
+
+    public function removeRepository($vendor, $bundle)
+    {
+        $this->log('Removing repo not implemented yet');
+    }
+
+    public function getRepositories()
+    {
+        return file_exists($this->repositories) ? Yaml::parse($this->repositories): array();
     }
 }

@@ -107,7 +107,7 @@ class TranslatorCommand extends ContainerAwareCommand
         }
 
         if ($all) {
-            //yeah !
+            $fqcns = $gitManager->getRepositories();
         } else {
             $fqcns[] = array('vendor' => $vendor, 'bundle' => $bundle);
         }

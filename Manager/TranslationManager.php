@@ -50,7 +50,9 @@ class TranslationManager
     	$translationItems = $this->om->getRepository('ClarolineTranslatorBundle:TranslationItem')
     		->findBy(array('vendor' => $vendor, 'bundle' => $bundle));
 
-    	foreach ($translationsItems as $item) {
+        $this->log('Removing ' . count($translationItems) . ' translations for ' . $vendor . ' ' . $bundle . '...');
+
+    	foreach ($translationItems as $item) {
     		$this->om->remove($item);
     	}
 
@@ -79,7 +81,7 @@ class TranslationManager
         }
 
         $this->log('Setting up database...');
-        $i = 0;
+        $_i = 0;
     		
         foreach ($iterator as $fileInfo) {
         	if ($fileInfo->isFile()) {
@@ -89,29 +91,63 @@ class TranslationManager
         		$parts = explode('.', $baseName);
         		$domain = $parts[0];
         		$lang = $parts[1];
-
-    			//no sub domains here yet
-        		foreach ($translations as $key => $translation) {
-        			$i++;
-        			$item = new TranslationItem();
-        			$item->setKey($key);
-        			$item->setTranslation($translation);
-        			$item->setDomain($domain);
-        			$item->setLang($lang);
-        			$item->setCommit($commit);
-        			$item->setVendor($vendor);
-        			$item->setBundle($bundle);
-        			$this->om->persist($item);    	
-
-        			if ($i % self::BATCH_SIZE === 0) {
-        				$this->log('Flushing ' . $i . ' items...');
-        				$this->om->flush();
-        			}
-        		}
+                $this->recursiveParseTranslation(
+                    $translations, 
+                    $domain, 
+                    $lang, 
+                    $commit, 
+                    $vendor, 
+                    $bundle,
+                    '', 
+                    $_i
+                );
         	}
         }
 
         $this->om->flush();
+    }
+
+    private function recursiveParseTranslation(
+        $translations,
+        $domain,
+        $lang, 
+        $commit,
+        $vendor,
+        $bundle,
+        $path = '', 
+        &$_i
+    )
+    {
+        foreach ($translations as $key => $value) {
+            if (is_array($value)) {
+                $this->recursiveParseTranslation(
+                    $value, 
+                    $domain, 
+                    $lang, 
+                    $commit, 
+                    $vendor, 
+                    $bundle,
+                    $path . '[' . $key . ']', 
+                    $_i
+                );
+            }
+
+            $_i++;
+            $item = new TranslationItem();
+            $item->setKey($path . '[' . $key . ']');
+            $item->setTranslation($value);
+            $item->setDomain($domain);
+            $item->setLang($lang);
+            $item->setCommit($commit);
+            $item->setVendor($vendor);
+            $item->setBundle($bundle);
+            $this->om->persist($item);      
+
+            if ($_i % self::BATCH_SIZE === 0) {
+                $this->log('Flushing ' . $_i . ' items...');
+                $this->om->flush();
+            }
+        }
     }
 
     private function getCurrentCommit($fqcn)

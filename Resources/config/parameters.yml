@@ -1,3 +1,4 @@
 parameters:
     claroline.param.git_directory: "%kernel.root_dir%/../git/"
     claroline.param.git_config: "%kernel.root_dir%/../git/config.yml"
+    claroline.param.git_repositories: "%kernel.root_dir%/../git/repositories.yml"
