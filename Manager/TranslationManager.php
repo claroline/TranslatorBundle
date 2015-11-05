@@ -42,12 +42,13 @@ class TranslationManager
         $this->gitDirectory = $gitDirectory;
         $this->om           = $om;
         $this->gitConfig    = $gitConfig;
+        $this->repository   = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
     }
 
     public function clear($vendor, $bundle)
     {
     	$this->log('Clearing the database for ' . $vendor . $bundle, LogLevel::DEBUG);
-    	$translationItems = $this->om->getRepository('ClarolineTranslatorBundle:TranslationItem')
+    	$translationItems = $this->repository
     		->findBy(array('vendor' => $vendor, 'bundle' => $bundle));
 
         $this->log('Removing ' . count($translationItems) . ' translations for ' . $vendor . ' ' . $bundle . '...');
@@ -163,5 +164,14 @@ class TranslationManager
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function getLastTranslations($vendor, $bundle, $lang, $currentCommit = true)
+    {
+        $commit = $this->getCurrentCommit($vendor . $bundle);
+        $translations = $this->repository
+            ->findBy(array('vendor' => $vendor, 'bundle' => $bundle, 'commit' => $commit, 'lang' => $lang));
+
+        return $translations;
     }
 }

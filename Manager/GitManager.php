@@ -46,24 +46,26 @@ class GitManager
         $this->repositories       = $repositories;
     }
 
-    public function add($language)
-    {
-
-    }
-
     public function pull($vendor, $bundle)
     {
         $this->log('Pulling ' . $vendor . ' ' . $bundle . '...');
     }
 
-    public function push($vendor, $bundle)
-    {
-        $this->log('Pushing ' . $vendor . ' ' . $bundle . '...');
-    }
-
     public function build($vendor, $bundle)
     {
         $this->log('Building ' . $vendor . ' ' . $bundle . '...');
+    }
+
+    public function commit($vendor, $bundle) {
+        //build new files from the database;
+        $items = $this->repo->getTranslationsToCommit(
+            $vendor, 
+            $bundle, 
+            $this->translationManager->getCurrentCommit($vendor . $bundle)
+        );
+
+        $data = $this->serializeForCommit($items);
+        $this->buildFilesToCommit($data);
     }
 
     public function init($vendor, $bundle)
@@ -154,5 +156,28 @@ class GitManager
     public function getRepositories()
     {
         return file_exists($this->repositories) ? Yaml::parse($this->repositories): array();
+    }
+
+    private function buildFilesToCommit()
+    {
+        foreach ($data as $domain => $lang) {
+            $fileName = $domain . '.' . $lang . '.yml';
+            $translations = array();
+
+            foreach ($lang as $key => $value) {
+                //parse key and add value.
+            }
+        }
+    }
+
+    private function serializeForCommit(array $items) 
+    {
+        $data = []
+
+        foreach ($items as $item) {
+            $data[$item->getDomain()][$item->getLang()][$item->getKey()] = $item->getTranslation(); 
+        }
+
+        return $data;
     }
 }

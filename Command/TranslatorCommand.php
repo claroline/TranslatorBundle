@@ -113,11 +113,11 @@ class TranslatorCommand extends ContainerAwareCommand
         }
 
         foreach ($fqcns as $fqcn) {
-            if ($input->getOption('remove'))  $gitManager->remove($fqcn['vendor'], $fqcn['bundle']);
-            if ($input->getOption('init'))    $gitManager->init($fqcn['vendor'], $fqcn['bundle']);
-            if ($input->getOption('pull'))    $gitManager->pull($fqcn['vendor'], $fqcn['bundle']);
-            if ($input->getOption('build'))   $gitManager->build($fqcn['vendor'], $fqcn['bundle']);
-            if ($input->getOption('push'))    $gitManager->push($fqcn['vendor'], $fqcn['bundle']);
+            if ($input->getOption('remove')) $gitManager->remove($fqcn['vendor'], $fqcn['bundle']);
+            if ($input->getOption('init'))   $gitManager->init($fqcn['vendor'], $fqcn['bundle']);
+            if ($input->getOption('commit')) $gitManager->commit($fqcn['vendor'], $fqcn['bundle']);
+            if ($input->getOption('pull'))   $gitManager->pull($fqcn['vendor'], $fqcn['bundle']);
+            if ($input->getOption('build'))  $gitManager->build($fqcn['vendor'], $fqcn['bundle']);
         }
     }
 }

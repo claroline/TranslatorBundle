@@ -13,9 +13,11 @@ namespace Claroline\TranslatorBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\SerializedName;
 
 /**
- * @ORM\Entity()
+ * @ORM\Entity(repositoryClass="Claroline\TranslatorBundle\Repository\TranslationItemRepository")
  * @ORM\Table(name="claro__git_translation_item")
  */
 class TranslationItem
@@ -29,42 +31,58 @@ class TranslationItem
 
     /**
      * @ORM\Column(name="translation_key", type="text")
+     * @Groups({"translator"})
+     * @SerializedName("key")
      */
     protected $key;
 
     /**
      * @ORM\Column(name="translation_value", type="text")
+     * @Groups({"translator"})     
+     * @SerializedName("translation")
      */
     protected $translation;
 
     /**
      * @ORM\Column(name="domain", type="text")
+     * @Groups({"translator"})
+     * @SerializedName("domain")
      */
     protected $domain;
 
     /**
      * @ORM\Column(name="commit_hash", type="text")
+     * @Groups({"translator"})
+     * @SerializedName("commit")
      */
     protected $commit;
 
     /**
      * @ORM\Column(name="lang", type="text")
+     * @Groups({"translator"})
+     * @SerializedName("lang")
      */
     protected $lang;
 
     /**
      * @ORM\Column(name="creation_date", type="datetime")
      * @Gedmo\Timestampable(on="create")
+     * @Groups({"translator"})
+     * @SerializedName("creationDate")
      */
     protected $creationDate;
 
     /**
      * @ORM\Column(name="vendor", type="text")
+     * @Groups({"translator"})
+     * @SerializedName("vendor")
      */
     protected $vendor;
 
     /**
      * @ORM\Column(name="bundle", type="text")
+     * @Groups({"translator"})
+     * @SerializedName("bundle")
      */
     protected $bundle;
 
