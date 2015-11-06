@@ -71,7 +71,7 @@ class GitManager
 
         $this->log('Commiting ' . count($items) . ' translations...');
         $data = $this->serializeForCommit($items);
-        $this->buildFilesToCommit($data);
+        $this->buildFilesToCommit($data, $vendor, $bundle);
         $this->log('Please commit and push manually.');
     }
 
@@ -165,7 +165,7 @@ class GitManager
         return file_exists($this->repositories) ? Yaml::parse($this->repositories): array();
     }
 
-    private function buildFilesToCommit($domains)
+    private function buildFilesToCommit($domains, $vendor, $bundle)
     {
         foreach ($domains as $domainName => $domain) {
             foreach ($domain as $lang => $translations) {
@@ -178,7 +178,11 @@ class GitManager
                 }
 
                 $translations = $this->recursiveMergeTranslations($els);
-                var_dump($translations);
+                $yaml = Yaml::dump($translations, 2);
+                file_put_contents(
+                    $this->translationManager->getTranslationsDirectory($vendor . $bundle) . '/' . $fileName,
+                    $yaml
+                );
             }
         }
     }
@@ -217,19 +221,49 @@ class GitManager
 
     /*
      * Now we need to merge all these elements. *sigh*.
+     * @todo = make the buildChildTranslations recursive.
+
      */
-    private function recursiveMergeTranslations(array $els, array $translations = array())
+    private function recursiveMergeTranslations(array $els)
     {
+        $translations = array();
+
+        //set the array_keys
+        foreach ($els as $int => $el) {
+            foreach ($el as $key => $value) {
+                $translations[$key] = $value;
+            }
+        }
+
+        //now we must build recursively child array and inject them;
         foreach ($els as $int => $el) {
             foreach ($el as $key => $value) {
                 if (is_array($value)) {
-                    $translations[$key] = $this->recursiveMergeTranslations($value);
-                } else {
-                    $translations[$key] = $value;
+                    $translations[$key] = $this->buildChildTranslationsForKey($els, $key);
                 }
             }
         }
 
         return $translations;
+    }
+
+    /*/
+     * This should be recursive because $value as $id => $translation may be found later in the tree
+     */
+    private function buildChildTranslationsForKey(array $els, $search)
+    {
+        $data = array();
+
+        foreach ($els as $int => $el) {
+            foreach ($el as $key => $value) {
+                if ($search === $key) {
+                    foreach ($value as $id => $translation) {
+                        $data[$id] = $translation;
+                    }
+                }
+            }
+        }
+
+        return $data;
     }
 }

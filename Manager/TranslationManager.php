@@ -159,7 +159,7 @@ class TranslationManager
     	return rtrim(file_get_contents($this->gitDirectory . $fqcn . '/.git/refs/heads/master'));
     }
 
-    private function getTranslationsDirectory($fqcn)
+    public function getTranslationsDirectory($fqcn)
     {
     	return $this->gitDirectory . $fqcn . '/Resources/translations';
     }
