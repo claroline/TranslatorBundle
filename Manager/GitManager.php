@@ -170,15 +170,15 @@ class GitManager
         foreach ($domains as $domainName => $domain) {
             foreach ($domain as $lang => $translations) {
                 $fileName = $domainName . '.' . $lang . '.yml';
-                $els[] = array();
+                $els = array();
 
                 foreach ($translations as $key => $value) {
                     preg_match_all('/\[([^]]+)\]/', $key, $matches, PREG_SET_ORDER);
                     $els[] = $this->recursiveParseKeys($matches, $value); 
                 }
 
-                $translations = $this->recursiveMergeTranslations($els);
-                $yaml = Yaml::dump($translations, 2);
+                $datadump = $this->recursiveMergeTranslations($els);
+                $yaml = Yaml::dump($datadump, 2);
                 file_put_contents(
                     $this->translationManager->getTranslationsDirectory($vendor . $bundle) . '/' . $fileName,
                     $yaml
