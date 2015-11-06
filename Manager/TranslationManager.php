@@ -108,6 +108,9 @@ class TranslationManager
         $this->om->flush();
     }
 
+    /*
+     *
+     */
     private function recursiveParseTranslation(
         $translations,
         $domain,
@@ -128,7 +131,7 @@ class TranslationManager
                     $commit, 
                     $vendor, 
                     $bundle,
-                    $path . '[' . $key . ']', 
+                    $path . '' . $key . ']', 
                     $_i
                 );
             }
@@ -151,7 +154,7 @@ class TranslationManager
         }
     }
 
-    private function getCurrentCommit($fqcn)
+    public function getCurrentCommit($fqcn)
     {
     	return rtrim(file_get_contents($this->gitDirectory . $fqcn . '/.git/refs/heads/master'));
     }

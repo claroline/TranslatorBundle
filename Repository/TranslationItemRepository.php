@@ -14,7 +14,7 @@ namespace Claroline\TranslatorBundle\Repository;
 use Doctrine\ORM\EntityRepository;
 
 class TranslationItemRepository extends EntityRepository
-{
+{/*
 	public function getTranslationsToCommit($vendor, $bundle, $commit)
 	{
         $dql = '
@@ -31,5 +31,5 @@ class TranslationItemRepository extends EntityRepository
         $items = $query->getResults();
 
         return $items;
-	}
+	}*/
 }

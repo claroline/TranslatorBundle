@@ -30,20 +30,24 @@ class GitManager
      *     "gitDirectory"       = @DI\Inject("%claroline.param.git_directory%"),
      *     "translationManager" = @DI\Inject("claroline.translation.manager.translation_manager"),
      *     "gitConfig"          = @DI\Inject("%claroline.param.git_config%"),
-     *     "repositories"       = @DI\Inject("%claroline.param.git_repositories%")
+     *     "repositories"       = @DI\Inject("%claroline.param.git_repositories%"),
+     *     "om"                 = @DI\Inject("claroline.persistence.object_manager")
      * })
      */
     public function __construct(
         $gitDirectory, 
         TranslationManager $translationManager,
         $gitConfig,
-        $repositories
+        $repositories,
+        $om
     )
     {
         $this->gitDirectory       = $gitDirectory;
         $this->translationManager = $translationManager;
         $this->gitConfig          = $gitConfig;
         $this->repositories       = $repositories;
+        $this->om                 = $om;
+        $this->repo               = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
     }
 
     public function pull($vendor, $bundle)
@@ -58,14 +62,17 @@ class GitManager
 
     public function commit($vendor, $bundle) {
         //build new files from the database;
-        $items = $this->repo->getTranslationsToCommit(
-            $vendor, 
-            $bundle, 
-            $this->translationManager->getCurrentCommit($vendor . $bundle)
+        $items = $this->repo->findBy(array(
+                'vendor' => $vendor,
+                'bundle' => $bundle,
+                'commit' => $this->translationManager->getCurrentCommit($vendor . $bundle)
+            )
         );
 
+        $this->log('Commiting ' . count($items) . ' translations...');
         $data = $this->serializeForCommit($items);
         $this->buildFilesToCommit($data);
+        $this->log('Please commit and push manually.');
     }
 
     public function init($vendor, $bundle)
@@ -158,26 +165,71 @@ class GitManager
         return file_exists($this->repositories) ? Yaml::parse($this->repositories): array();
     }
 
-    private function buildFilesToCommit()
+    private function buildFilesToCommit($domains)
     {
-        foreach ($data as $domain => $lang) {
-            $fileName = $domain . '.' . $lang . '.yml';
-            $translations = array();
+        foreach ($domains as $domainName => $domain) {
+            foreach ($domain as $lang => $translations) {
+                $fileName = $domainName . '.' . $lang . '.yml';
+                $els[] = array();
 
-            foreach ($lang as $key => $value) {
-                //parse key and add value.
+                foreach ($translations as $key => $value) {
+                    preg_match_all('/\[([^]]+)\]/', $key, $matches, PREG_SET_ORDER);
+                    $els[] = $this->recursiveParseKeys($matches, $value); 
+                }
+
+                $translations = $this->recursiveMergeTranslations($els);
+                var_dump($translations);
             }
         }
     }
 
     private function serializeForCommit(array $items) 
     {
-        $data = []
+        $data = [];
 
         foreach ($items as $item) {
             $data[$item->getDomain()][$item->getLang()][$item->getKey()] = $item->getTranslation(); 
         }
 
         return $data;
+    }
+
+    /* 
+     * Returns a translation element like this: array(key1 => array(key2 => ... value))
+     * because translations can be stored as array in different namespaces an makes evertything
+     * much more complicated for me. This way we can sort of get the "namespace"
+     * of the translation.
+     * I'm also a wizzard.
+     */
+    private function recursiveParseKeys($keys, $value, $el = array(), $depth = 0)
+    {
+        $el[$keys[$depth][1]] = (++$depth < count($keys)) ? 
+            $this->recursiveParseKeys(
+                $keys, 
+                $value, 
+                $el[$keys[$depth][1]], 
+                $depth
+            ):
+            $value;
+
+        return $el;
+    }
+
+    /*
+     * Now we need to merge all these elements. *sigh*.
+     */
+    private function recursiveMergeTranslations(array $els, array $translations = array())
+    {
+        foreach ($els as $int => $el) {
+            foreach ($el as $key => $value) {
+                if (is_array($value)) {
+                    $translations[$key] = $this->recursiveMergeTranslations($value);
+                } else {
+                    $translations[$key] = $value;
+                }
+            }
+        }
+
+        return $translations;
     }
 }

@@ -32,16 +32,16 @@ class TranslatorCommand extends ContainerAwareCommand
             )
         );
         $this->addOption(
+            '--commit',
+            'commit',
+            InputOption::VALUE_NONE,
+            'Commit the last changes stored in the database.'
+        );
+        $this->addOption(
             '--pull',
             'pull',
             InputOption::VALUE_NONE,
-            'Pulls the last changes from git.'
-        );
-        $this->addOption(
-            '--push',
-            'push',
-            InputOption::VALUE_NONE,
-            'Push the last changes from the database.'
+            'Pull the last changes from git.'
         );
         $this->addOption(
             '--build',
