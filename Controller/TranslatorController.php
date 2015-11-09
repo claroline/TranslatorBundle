@@ -17,12 +17,18 @@ class TranslatorController extends Controller
     public function appAction()
     {
         $repositories = $this->container->get('claroline.translation.manager.git_manager')->getRepositories();
+        $locales = $this->container
+        ->get('claroline.translation.manager.translation_manager')->getAvailableLocales();
 
-        return array('repositories' => $repositories);
+        return array('repositories' => $repositories, 'locales' => $locales);
     }
 
     /**         
-     * @EXT\Route("/{vendor}/{bundle}/{lang}/latest.json", name="claroline_translator_get_latest")
+     * @EXT\Route(
+     *     "/{vendor}/{bundle}/{lang}/latest.json", 
+     *     name="claroline_translator_get_latest",
+     *     options={"expose"=true}
+     * )
      *
      * @return Response
      */
@@ -35,5 +41,41 @@ class TranslatorController extends Controller
         $response->setContent($data);
 
         return $response;
+    }
+
+    /**         
+     * @EXT\Route(
+     *     "/langs.json", 
+     *     name="claroline_translator_langs",
+     *     options={"expose"=true}
+     * )
+     *
+     * @return Response
+     */
+    public function getLangAction()
+    {
+        $locales = $this->container
+            ->get('claroline.translation.manager.translation_manager')
+            ->getAvailableLocales();
+
+        return new JsonResponse($locales);
+    }
+
+    /**         
+     * @EXT\Route(
+     *     "/repositories.json", 
+     *     name="claroline_translator_repositories",
+     *     options={"expose"=true}
+     * )
+     *
+     * @return Response
+     */
+    public function getRepositories()
+    {
+        $repositories = $this->container
+            ->get('claroline.translation.manager.git_manager')
+            ->getRepositories();
+
+        return new JsonResponse($repositories);
     }
 }

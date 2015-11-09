@@ -177,4 +177,12 @@ class TranslationManager
 
         return $translations;
     }
+
+    /*
+     * Change the implementation to make a dynamic locale list.
+     */
+    public function getAvailableLocales()
+    {
+        return array('fr', 'en', 'nl', 'de', 'es');
+    }
 }

@@ -17,7 +17,7 @@ use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\SerializedName;
 
 /**
- * @ORM\Entity(repositoryClass="Claroline\TranslatorBundle\Repository\TranslationItemRepository")
+ * @ORM\Entity()
  * @ORM\Table(name="claro__git_translation_item")
  */
 class TranslationItem
@@ -85,6 +85,15 @@ class TranslationItem
      * @SerializedName("bundle")
      */
     protected $bundle;
+
+    /**
+     * @ORM\ManyToOne(
+     *     targetEntity="Claroline\CoreBundle\Entity\User",
+     *     cascade={"persist"}
+     * )
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    protected $creator;
 
     public function getId()
     {
@@ -169,5 +178,15 @@ class TranslationItem
     public function getVendor()
     {
         return $this->vendor;
+    }
+
+    public function setCreator($creator)
+    {
+        $this->creator = $creator;
+    }
+
+    public function getCreator()
+    {
+        return $this->creator;
     }
 } 

@@ -1,6 +1,6 @@
 {% extends 'ClarolineCoreBundle:Desktop:layout.html.twig' %}
 
-{% block title %}{{ 'messages' | trans({}, 'platform') | striptags | raw }}{% endblock %}
+{% block title %}{{ 'translator' | trans({}, 'platform') | striptags | raw }}{% endblock %}
 
 {% block breadcrumb %}
     {{
@@ -15,16 +15,19 @@
 
 {% block content %}
     <div class="panel panel-default" ng-app="gitTranslator">
-        <div class="panel-heading" ng-controller="headerCtrl">
+        <div class="panel-heading">
             {{ 'repositories'|trans({}, 'platforms') }}
         </div>
         <div class="panel-body" ng-controller="contentCtrl">
-            <div class="list-group">
-                {% for repo, value in repositories %}
-                    <a class="list-group-item" href="#" >
-                        {{ repo }}
-                    </a>
-                {% endfor %}
+            <div class="col-md-2">
+                <locales class="locale-list">
+                </locales>
+                <repositories class="list-group">
+                </repositories>
+            </div>
+            <div class="col-md-10">
+                <translations>
+                </translations>
             </div>
         </div>
     </div>
@@ -32,6 +35,17 @@
 
 {% block javascripts %}
     {{ parent() }}
+
+    {# Angular JS #}
+    {% javascripts debug=false filter='jsmin' output='vendor/claroline/js/angular.js'
+        '@InnovaAngularJSBundle/Resources/public/js/angular.min.js'
+        '@InnovaAngularJSBundle/Resources/public/js/angular-sanitize.min.js'
+        '@InnovaAngularJSBundle/Resources/public/js/angular-route.min.js'
+        '@InnovaAngularJSBundle/Resources/public/js/angular-resource.min.js'
+        '@InnovaAngularJSBundle/Resources/public/js/angular-touch.min.js'
+    %}
+    <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
 
     {# Set some vars needed by Angular parts #}
     <script type="text/javascript">
