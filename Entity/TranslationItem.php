@@ -15,9 +15,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\Accessor;
 
 /**
- * @ORM\Entity()
+ * @ORM\Entity(repositoryClass="Claroline\TranslatorBundle\Repository\TranslationItemRepository")
  * @ORM\Table(name="claro__git_translation_item")
  */
 class TranslationItem
@@ -94,6 +95,13 @@ class TranslationItem
      * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
      */
     protected $creator;
+
+    /**  
+     * @SerializedName("author")
+     * @Groups({"translator"})
+     * @Accessor(getter="getAuthor")
+     */
+    protected $author;
 
     public function getId()
     {
@@ -188,5 +196,10 @@ class TranslationItem
     public function getCreator()
     {
         return $this->creator;
+    }
+
+    public function getAuthor()
+    {
+        return null;
     }
 } 

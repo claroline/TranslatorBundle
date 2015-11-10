@@ -30,19 +30,22 @@ class TranslationManager
      * @DI\InjectParams({
      *     "gitDirectory" = @DI\Inject("%claroline.param.git_directory%"),
      *	   "om"           = @DI\Inject("claroline.persistence.object_manager"),
-     *	   "gitConfig"     = @DI\Inject("%claroline.param.git_config%")
+     *	   "gitConfig"    = @DI\Inject("%claroline.param.git_config%"),
+     *     "tokenStorage" = @DI\Inject("security.token_storage")
      * })
      */
     public function __construct(
         $gitDirectory,
         $om,
-        $gitConfig
+        $gitConfig,
+        $tokenStorage
     )
     {
         $this->gitDirectory = $gitDirectory;
         $this->om           = $om;
         $this->gitConfig    = $gitConfig;
         $this->repository   = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
+        $this->tokenStorage = $tokenStorage;
     }
 
     public function clear($vendor, $bundle)
@@ -172,10 +175,49 @@ class TranslationManager
     public function getLastTranslations($vendor, $bundle, $lang, $currentCommit = true)
     {
         $commit = $this->getCurrentCommit($vendor . $bundle);
+        $last = array();
+
         $translations = $this->repository
             ->findBy(array('vendor' => $vendor, 'bundle' => $bundle, 'commit' => $commit, 'lang' => $lang));
 
+        foreach ($translations as $translation) {
+            $last[$vendor . $bundle . $commit . $translation->getDomain() . $translation->getKey()] = $translation;
+        }
+
+        return $last;
+    }
+
+    public function getTranslationInfo($vendor, $bundle, $lang, $key)
+    {
+        echo $key;
+
+        $translations = $this->repository->findBy(array(
+            'vendor' => $vendor, 
+            'bundle' => $bundle, 
+            'lang'   => $lang, 
+            'key'    => $key
+        ));
+
         return $translations;
+    }
+
+    public function addTranslation($vendor, $bundle, $domain, $lang, $key, $value)
+    {
+        $creator = $this->tokenStorage->getToken()->getUser() !== 'anon.' ? 
+            $this->tokenStorage->getToken()->getUser(): null;
+        $item = new TranslationItem();
+        $item->setVendor($vendor);
+        $item->setBundle($bundle);
+        $item->setLang($lang);
+        $item->setKey($key);
+        $item->setTranslation($value);
+        $item->setDomain($domain);
+        $item->setCommit($this->getCurrentCommit($vendor . $bundle));
+        $item->setCreator($creator);
+        $this->om->persist($item);
+        $this->om->flush();
+
+        return $item;
     }
 
     /*

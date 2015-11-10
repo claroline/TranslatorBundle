@@ -1,3 +1,19 @@
-<div data-ng-repeat="translation in translations">
-	{{ translation.key }}: {{ translation.translation }}
-</div>
+<form data-ng-repeat="(index, translation) in translations" name="{{ translation.id }}" id="{{ translation.id }}" class="form-horizontal">
+	<div class="form-group">
+		<label class="col-sm-3 control-label"> {{ translation.key }} </label>
+		<div class="col-sm-8">
+			<input 
+				type="text" 
+				value="{{ translation.translation }}"
+				class="form-control"
+				id="{{ translation.id }}"
+				ng-model="translation.translation"
+			>
+			</input>
+		</div>
+		<div class="btn-group">
+			<a class="btn btn-default" href="#"><i class="fa fa-info circle"></i></a> 
+			<a class="btn btn-default" href="#" ng-click="addTranslation(index, translation.vendor, translation.bundle, translation.domain, translation.key)"><i class="fa fa-check"></i></a>
+		</div>
+	</div>
+</form>

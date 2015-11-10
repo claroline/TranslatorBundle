@@ -5,6 +5,9 @@ namespace Claroline\TranslatorBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use JMS\Serializer\SerializationContext;
+
 
 class TranslatorController extends Controller
 {
@@ -35,6 +38,69 @@ class TranslatorController extends Controller
     public function getLastTranslationsAction($vendor, $bundle, $lang) {
         $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
         $translations = $translationManager->getLastTranslations($vendor, $bundle, $lang);
+        $context = new SerializationContext();
+        $context->setGroups('translator');
+        $data = $this->container->get('serializer')->serialize($translations, 'json', $context); 
+        //var_dump($data);
+        //return  new Response('<body></body>');  
+        $response = new JsonResponse();
+        $response->setContent($data);
+
+        return $response;
+    }
+
+    /**              
+     * @EXT\Route(
+     *     "/translation/add", 
+     *     name="claroline_translator_add_translation",
+     *     options={"expose"=true}
+     * )
+     *
+     * @return Response
+     */
+    public function addTranslationAction()
+    {
+        $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
+
+        $value  = $this->get('request')->request->get('translation');
+        $vendor = $this->get('request')->request->get('vendor');
+        $bundle = $this->get('request')->request->get('bundle');
+        $domain = $this->get('request')->request->get('domain');
+        $lang   = $this->get('request')->request->get('lang');
+        $key    = $this->get('request')->request->get('key');
+
+        $translation = $translationManager->addTranslation(
+            $vendor,
+            $bundle,
+            $domain,
+            $lang,
+            $key,
+            $value
+        );
+
+        $context = new SerializationContext();
+        $context->setGroups('translator');
+        $data = $this->container->get('serializer')->serialize($translation, 'json', $context);
+
+        $response = new JsonResponse();
+        $response->setContent($data);
+
+        return $response;
+    }
+
+    /**              
+     * @EXT\Route(
+     *     "/{vendor}/{bundle}/{lang}/{key}/translation.json", 
+     *     name="claroline_translator_get_translation_info",
+     *     options={"expose"=true}
+     * )
+     *
+     * @return Response
+     */
+    public function loadTranslationsInfosAction($vendor, $bundle, $lang, $key)
+    {
+        $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
+        $translations = $translationManager->getTranslationInfo($vendor, $bundle, $lang, $key);
         $data = $this->container->get('serializer')->serialize($translations, 'json');
 
         $response = new JsonResponse();

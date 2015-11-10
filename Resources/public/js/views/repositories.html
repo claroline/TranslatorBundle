@@ -1,7 +1,6 @@
 <a class="list-group-item" data-ng-repeat="(key, value) in repositories" 
-	data-vendor="{{ value.vendor }}"
-	data-bundle="{{ value.bundle }}"
-	ng-click="setRepository(value.vendor, value.bundle)"
+	ng-click="setRepository(value)"
+	href="#"
 >
     {{ key }}
 </a>
