@@ -41,8 +41,6 @@ class TranslatorController extends Controller
         $context = new SerializationContext();
         $context->setGroups('translator');
         $data = $this->container->get('serializer')->serialize($translations, 'json', $context); 
-        //var_dump($data);
-        //return  new Response('<body></body>');  
         $response = new JsonResponse();
         $response->setContent($data);
 

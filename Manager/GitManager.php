@@ -31,7 +31,8 @@ class GitManager
      *     "translationManager" = @DI\Inject("claroline.translation.manager.translation_manager"),
      *     "gitConfig"          = @DI\Inject("%claroline.param.git_config%"),
      *     "repositories"       = @DI\Inject("%claroline.param.git_repositories%"),
-     *     "om"                 = @DI\Inject("claroline.persistence.object_manager")
+     *     "om"                 = @DI\Inject("claroline.persistence.object_manager"),
+     *     "devTranslator"      = @DI\Inject("claroline.dev_manager.translation_manager")
      * })
      */
     public function __construct(
@@ -39,7 +40,8 @@ class GitManager
         TranslationManager $translationManager,
         $gitConfig,
         $repositories,
-        $om
+        $om,
+        $devTranslator
     )
     {
         $this->gitDirectory       = $gitDirectory;
@@ -48,6 +50,7 @@ class GitManager
         $this->repositories       = $repositories;
         $this->om                 = $om;
         $this->repo               = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
+        $this->devTranslator      = $devTranslator;
     }
 
     public function pull($vendor, $bundle)
@@ -104,6 +107,8 @@ class GitManager
         $this->log('git pull --depth=1 origin master');
         exec('git pull --depth=1 origin master');
         $this->log('Git was set up for ' . $vendor . $bundle . '.');
+
+        //set the translations for each supported languages
         $this->translationManager->init($vendor, $bundle);
     }
 

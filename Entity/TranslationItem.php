@@ -103,6 +103,20 @@ class TranslationItem
      */
     protected $author;
 
+    /**
+     * @ORM\Column(name="user_lock", type="boolean")
+     * @Groups({"translator"})
+     * @SerializedName("user_lock")
+     */
+    protected $isUserLocked = false;
+
+    /**
+     * @ORM\Column(name="admin_lock", type="boolean")
+     * @Groups({"translator"})
+     * @SerializedName("admin_lock")
+     */
+    protected $isAdminLocked = false;
+
     public function getId()
     {
         return $this->id;
@@ -201,5 +215,25 @@ class TranslationItem
     public function getAuthor()
     {
         return null;
+    }
+
+    public function setIsAdminLocked($boolean)
+    {
+        $this->isAdminLocked = $boolean;
+    }
+
+    public function isAdminLocked()
+    {
+        return $this->isAdminLocked;
+    }
+
+    public function setIsUserLocked($boolean)
+    {
+        $this->isUserLocked = $boolean;
+    }
+
+    public function isUserLocked()
+    {
+        return $this->isUserLocked;
     }
 } 

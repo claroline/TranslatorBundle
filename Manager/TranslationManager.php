@@ -24,28 +24,32 @@ use Symfony\Component\Yaml\Yaml;
 class TranslationManager
 {
     use LoggableTrait;
+
     const BATCH_SIZE = 500;
 
     /**
      * @DI\InjectParams({
-     *     "gitDirectory" = @DI\Inject("%claroline.param.git_directory%"),
-     *	   "om"           = @DI\Inject("claroline.persistence.object_manager"),
-     *	   "gitConfig"    = @DI\Inject("%claroline.param.git_config%"),
-     *     "tokenStorage" = @DI\Inject("security.token_storage")
+     *     "gitDirectory"  = @DI\Inject("%claroline.param.git_directory%"),
+     *	   "om"            = @DI\Inject("claroline.persistence.object_manager"),
+     *	   "gitConfig"     = @DI\Inject("%claroline.param.git_config%"),
+     *     "tokenStorage"  = @DI\Inject("security.token_storage"),
+     *     "devTranslator" = @DI\Inject("claroline.dev_manager.translation_manager")
      * })
      */
     public function __construct(
         $gitDirectory,
         $om,
         $gitConfig,
-        $tokenStorage
+        $tokenStorage,
+        $devTranslator
     )
     {
-        $this->gitDirectory = $gitDirectory;
-        $this->om           = $om;
-        $this->gitConfig    = $gitConfig;
-        $this->repository   = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
-        $this->tokenStorage = $tokenStorage;
+        $this->gitDirectory  = $gitDirectory;
+        $this->om            = $om;
+        $this->gitConfig     = $gitConfig;
+        $this->repository    = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
+        $this->tokenStorage  = $tokenStorage;
+        $this->devTranslator = $devTranslator;
     }
 
     public function clear($vendor, $bundle)
@@ -85,16 +89,39 @@ class TranslationManager
         }
 
         $this->log('Setting up database...');
-        $_i = 0;
+        $domains = array();
     		
         foreach ($iterator as $fileInfo) {
         	if ($fileInfo->isFile()) {
-        		$baseName = $fileInfo->getBasename();
-        		$this->log('Initializing ' . $baseName . '...');
-        		$translations = Yaml::parse($fileInfo->getPathname());
-        		$parts = explode('.', $baseName);
+                $parts = explode('.', $fileInfo->getBasename());
         		$domain = $parts[0];
         		$lang = $parts[1];
+                $domains[$domain][] = $lang;
+        	}
+        }
+
+        //used for doctrine transaction
+        $_i = 0;
+
+        foreach ($domains as $domain => $langs) {
+
+            $translationMainPath = $this->getTranslationsDirectory($vendor . $bundle) . '/' . $domain . '.fr.yml';
+
+            foreach ($this->getAvailableLocales() as $lang) {
+               
+                $translationFilePath = $this->getTranslationsDirectory($vendor . $bundle) . '/' . $domain . '.' . $lang . '.yml';
+                $this->log('Initializing ' . $translationFilePath . '...');
+
+                if (file_exists($translationMainPath)) {
+                    $this->log('Initializing ' . $translationFilePath . '...', LogLevel::DEBUG);
+                    $this->devTranslator->fill(
+                        $translationMainPath, 
+                        $translationFilePath
+                    );
+                }
+
+                $translations = Yaml::parse($translationFilePath);
+
                 $this->recursiveParseTranslation(
                     $translations, 
                     $domain, 
@@ -105,7 +132,7 @@ class TranslationManager
                     '', 
                     $_i
                 );
-        	}
+            }
         }
 
         $this->om->flush();
@@ -169,6 +196,7 @@ class TranslationManager
 
     public function setLogger(LoggerInterface $logger)
     {
+        $this->devTranslator->setLogger($logger);
         $this->logger = $logger;
     }
 

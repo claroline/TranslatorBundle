@@ -1,7 +1,6 @@
 <form data-ng-repeat="(index, translation) in translations" name="{{ translation.id }}" id="{{ translation.id }}" class="form-horizontal">
 	<div class="form-group">
-		<label class="col-sm-3 control-label"> {{ translation.key }} </label>
-		<div class="col-sm-8">
+		<div class="col-sm-10">
 			<input 
 				type="text" 
 				value="{{ translation.translation }}"
@@ -11,7 +10,7 @@
 			>
 			</input>
 		</div>
-		<div class="btn-group">
+		<div class="btn-group col-sm-2">
 			<a class="btn btn-default" href="#"><i class="fa fa-info circle"></i></a> 
 			<a class="btn btn-default" href="#" ng-click="addTranslation(index, translation.vendor, translation.bundle, translation.domain, translation.key)"><i class="fa fa-check"></i></a>
 		</div>
