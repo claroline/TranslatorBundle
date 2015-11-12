@@ -1,30 +1,61 @@
-var gitTranslator = angular.module('gitTranslator', []);
+var gitTranslator = angular.module('gitTranslator', ['ui.bootstrap']);
 
-gitTranslator.controller('contentCtrl', function($scope, $log, $http, API) {
-	//todo: add cache system
-	$scope.lang             = 'fr';
-	$scope.bundle           = 'CoreBundle';
-	$scope.vendor           = 'claroline';
-	$scope.reposirory       = 'clarolineCoreBundle';
-	$scope.$log             = $log;
-	$scope.$langs           = ['fr', 'en'];
-	$scope.translations     = [];
-	$scope.preferedLang     = 'fr';
-	//cached for translations info
-	$scope.translationsInfo = [];
-  
-	API.locales().then(function(d) {
-		$scope.langs = d.data;
-	});    
+//let's do some initialization first.
+gitTranslator.config(function ($httpProvider) {
+	var stackedRequests = 0;
+
+	$httpProvider.interceptors.push(function ($q) {
+		return {
+			'request': function(config) {
+				stackedRequests++;
+				$('.please-wait').show();
+
+				return config;
+			},
+			'response': function(response) {
+				stackedRequests--;
+				$('.please-wait').hide();
+
+				return response;
+			}
+		};
+	});
+});
+
+gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFactory, API) {
+	$http.defaults.cache        = true;
+	$scope.lang                 = 'fr';
+	$scope.bundle               = 'CoreBundle';
+	$scope.vendor               = 'claroline';
+	$scope.repository           = 'clarolineCoreBundle';
+	$scope.$log                 = $log;
+	$scope.$langs               = ['fr', 'en'];
+	$scope.translations         = [];
+	$scope.preferedLang         = 'fr';
+	$scope.preferedTranslations = [];
+	$scope.translationInfos     = '';
+	$scope.infos                = '';
 
 	API.repositories().then(function(d) {
 		$scope.repositories = d.data;
 	});
 
+	API.locales().then(function(d) {
+		$scope.langs = d.data;
+	});    
+
 	//current translations
 	API.load($scope.lang, $scope.vendor, $scope.bundle).then(function(d) {
-		$scope.translations = d.data;
-	});                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+		$scope.preferedTranslations = $scope.translations = d.data;
+	});    
+
+	$scope.setPreferedLang = function(lang) {
+		$scope.preferedLang = lang;
+		API.load(lang, $scope.vendor, $scope.bundle).then(function(d) {
+			$scope.preferedTranslations = d.data;
+		}); 
+
+	}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 
 	$scope.setLang = function(lang) {
 		$scope.lang = lang;
@@ -41,19 +72,9 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, API) {
 		    	$scope.repository = $scope.vendor + $scope.bundle;
 		    }
 		}
-
-		API.load($scope.lang, $scope.vendor, $scope.bundle).then(function(d) {
-			$scope.translations = d.data;
-		}); 
 	}
 
-	$scope.getTranslationsInfos = function(key) {
-		API.translationsInfo($scope.lang, $scope.vendor, $scope.bundle, key).then(function(d) {
-			$scope.translationsInfo[$scope.repository][$scope.lang] = d.data;
-		});
-	}
-
-	$scope.addTranslation = function(index, vendor, bundle, domain, key) {
+	$scope.addTranslation = function(index) {
 		var element = $scope.translations[index];
 
 		var data = {
@@ -70,11 +91,24 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, API) {
 			data
 		);
 
-		/*.success(function() {
-			alert ('yeah !');
-		}).failure(function() {
-			alert('FUCK NO');
-		});*/
+		var httpCache = $cacheFactory.get('$http');
+		var cacheKey = Routing.generate(
+			'claroline_translator_get_latest', 
+			{'vendor': element.bundle, 'bundle': element.bundle, 'lang': $scope.lang}
+		);
+		var cachedResponse = httpCache.put(cacheKey, $scope.translations);
+	}
+
+	$scope.translationInfo = function(index) {
+		var element = $scope.translations[index];
+		$scope.infos = '';
+
+		API.translationsInfo($scope.lang, element.vendor, element.bundle, element.key).then(function(d) {
+			$scope.translationInfos = d.data;
+			for (var i = 0; i < $scope.translationInfos.length; i++) {
+				$scope.infos += $scope.translationInfos[i].translation;
+			}
+		});
 	}
 });
 
@@ -98,7 +132,7 @@ gitTranslator.factory('API', function($http) {
 
 	api.translationsInfo = function(lang, vendor, bundle, key) {
 		return $http.get(Routing.generate(
-			'claroline_translator_get_latest', 
+			'claroline_translator_get_translation_info', 
 			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
 		));
 	}
@@ -134,4 +168,14 @@ angular.module('gitTranslator').directive('translations', [
             replace: false
 		}
 	}
+]);
+
+angular.module('gitTranslator').directive('preferedlang', [
+    function preferedlang() {
+        return {
+        	restrict: 'E',
+            templateUrl: AngularApp.webDir + 'bundles/clarolinetranslator/js/views/prefered.html',
+            replace: false
+        };
+    }
 ]);

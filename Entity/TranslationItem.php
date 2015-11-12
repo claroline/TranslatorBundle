@@ -27,6 +27,8 @@ class TranslationItem
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @Groups({"translator"})
+     * @SerializedName("id")
      */
     private $id;
 

@@ -20,14 +20,24 @@
         </div>
         <div class="panel-body" ng-controller="contentCtrl">
             <div class="col-md-2">
-                <locales class="locale-list">
-                </locales>
-                <repositories class="list-group">
-                </repositories>
+                <div>
+                    <locales class="locale-list">
+                    </locales>
+                </div>
+                <div>
+                    <repositories class="list-group">
+                    </repositories>
+                </div>
             </div>
             <div class="col-md-10">
-                <translations>
-                </translations>
+                <div>
+                    <preferedlang class="locale-list">
+                    </preferedlang>
+                </div>
+                <div>
+                    <translations>
+                    </translations>
+                </div>
             </div>
         </div>
     </div>
@@ -43,6 +53,18 @@
         '@InnovaAngularJSBundle/Resources/public/js/angular-route.min.js'
         '@InnovaAngularJSBundle/Resources/public/js/angular-resource.min.js'
         '@InnovaAngularJSBundle/Resources/public/js/angular-touch.min.js'
+    %}
+    <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+
+    {# Angular UI #}
+    {% javascripts debug=false filter='jsmin' output='vendor/angular/angular-ui.js'
+        '@InnovaAngularUIBootstrapBundle/Resources/public/js/*'
+        '@InnovaAngularUITreeBundle/Resources/public/js/*'
+        '@InnovaAngularUIPageslideBundle/Resources/public/js/*'
+        '@InnovaAngularUITinyMCEBundle/Resources/public/js/*'
+        '@InnovaAngularUITranslationBundle/Resources/public/js/*'
+        '@InnovaAngularUIResourcePickerBundle/Resources/public/js/*'
     %}
     <script type="text/javascript" src="{{ asset_url }}"></script>
     {% endjavascripts %}

@@ -1,18 +1,49 @@
-<form data-ng-repeat="(index, translation) in translations" name="{{ translation.id }}" id="{{ translation.id }}" class="form-horizontal">
-	<div class="form-group">
-		<div class="col-sm-10">
-			<input 
-				type="text" 
-				value="{{ translation.translation }}"
-				class="form-control"
-				id="{{ translation.id }}"
-				ng-model="translation.translation"
-			>
-			</input>
+<div ng-repeat="(index, translation) in translations">
+	<form name="{{ translation.id }}" class="form-horizontal">
+		<div class="form-group">
+			<div class="col-sm-9">
+				<input 
+					type="text" 
+					value="{{ translation.translation }}"
+					class="form-control"
+					ng-model="translation.translation"
+				>
+				</input>
+			</div>
+			<div class="btn-group col-sm-3">
+				<a class="btn btn-default" 
+					role="button" 
+					data-toggle="collapse" 
+					href="#collapse{{ translation.id }}" 
+					aria-expanded="true"
+				>
+					<i class="fa fa-sort-desc"></i>
+				</a> 
+				<button
+				    type="button"		 
+					class="btn btn-default" 
+				    ng-click="translationInfo(index)"
+				    data-toggle="popover"
+				    title="title"
+				    data-container="body"
+				    data-content="{{ infos }}"
+				>
+					<i class="fa fa-info-circle"></i>
+				</button> 
+				<a class="btn btn-default" href="#" ng-click="addTranslation(index)">
+					<i class="fa fa-check"></i>
+				</a>
+				<a class="btn btn-default" href="#">
+					<i class="fa fa-unlock-alt"></i>
+				</a> 
+				<a class="btn btn-default" href="#">
+					<i class="fa fa-unlock"></i>
+				</a> 
+			</div>
 		</div>
-		<div class="btn-group col-sm-2">
-			<a class="btn btn-default" href="#"><i class="fa fa-info circle"></i></a> 
-			<a class="btn btn-default" href="#" ng-click="addTranslation(index, translation.vendor, translation.bundle, translation.domain, translation.key)"><i class="fa fa-check"></i></a>
-		</div>
-	</div>
-</form>
+	</form>
+	<div class="collapse" id="collapse{{ translation.id }}"> 
+		{{ preferedTranslations[index].translation }}
+	</br>
+    </div>
+</div>

@@ -217,8 +217,6 @@ class TranslationManager
 
     public function getTranslationInfo($vendor, $bundle, $lang, $key)
     {
-        echo $key;
-
         $translations = $this->repository->findBy(array(
             'vendor' => $vendor, 
             'bundle' => $bundle, 
