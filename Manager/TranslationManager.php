@@ -26,6 +26,7 @@ class TranslationManager
     use LoggableTrait;
 
     const BATCH_SIZE = 500;
+    const DQL_LIMIT = 99999;
 
     /**
      * @DI\InjectParams({
@@ -200,19 +201,31 @@ class TranslationManager
         $this->logger = $logger;
     }
 
-    public function getLastTranslations($vendor, $bundle, $lang, $currentCommit = true)
+    public function getLastTranslations($vendor, $bundle, $lang, $currentCommit = true, $page = 1)
     {
         $commit = $this->getCurrentCommit($vendor . $bundle);
         $last = array();
 
         $translations = $this->repository
-            ->findBy(array('vendor' => $vendor, 'bundle' => $bundle, 'commit' => $commit, 'lang' => $lang));
+            ->findLastTranslations($vendor, $bundle, $commit, $lang, $page);
 
+        //this is way more efficient than the 'NOT EXISTS' for large requests
         foreach ($translations as $translation) {
             $last[$vendor . $bundle . $commit . $translation->getDomain() . $translation->getKey()] = $translation;
         }
 
-        return $last;
+        //this is where we have to put the offset/limit.
+        $keys = array_keys($last);
+        $return = array();
+
+        $start = $i = ($page - 1) * self::DQL_LIMIT;
+        $max = ($i + self::DQL_LIMIT > count($keys)) ? count($keys): $i + self::DQL_LIMIT;
+
+        for ($i = $start; $i < $max; $i++) {
+            $return[$keys[$i]] = $last[$keys[$i]];
+        }
+
+        return array_values($return);
     }
 
     public function getTranslationInfo($vendor, $bundle, $lang, $key)
@@ -252,5 +265,29 @@ class TranslationManager
     public function getAvailableLocales()
     {
         return array('fr', 'en', 'nl', 'de', 'es');
+    }
+
+    public function clickUserLockAction($vendor, $bundle, $lang, $key)
+    {
+        $translations = $this->getTranslationInfo($vendor, $bundle, $lang, $key);
+
+        foreach ($translations as $translation) {
+            $translation->changeUserLock();
+            $this->om->persist($translation);
+        }
+
+        $this->om->flush();
+    }
+
+    public function clickAdminLockAction($vendor, $bundle, $lang, $key)
+    {
+        $translations = $this->getTranslationInfo($vendor, $bundle, $lang, $key);
+
+        foreach ($translations as $translation) {
+            $translation->changeAdminLock();
+            $this->om->persist($translation);
+        }
+
+        $this->om->flush();
     }
 }

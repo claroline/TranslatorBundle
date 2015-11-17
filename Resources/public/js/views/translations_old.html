@@ -1,0 +1,52 @@
+<div ng-repeat="(index, translation) in translations">
+	<form name="{{ translation.id }}" class="form-horizontal">
+		<div class="form-group">
+			<div class="col-sm-9">
+				<input 
+					type="text" 
+					value="{{ translation.translation }}"
+					class="form-control"
+					ng-model="translation.translation"
+				>
+				</input>
+			</div>
+			<div class="btn-group col-sm-3">
+				<a class="btn btn-default" 
+					role="button" 
+					data-toggle="collapse" 
+					href="#collapse{{ translation.id }}" 
+					aria-expanded="true"
+				>
+					<i class="fa fa-sort-desc"></i>
+				</a> 
+				<button
+				    type="button"		 
+					class="btn btn-default" 
+				    ng-click="translationInfo(index)"
+				    data-toggle="popover"
+				    title="title"
+				    data-container="body"
+				    data-content="{{ infos }}"
+				>
+					<i class="fa fa-info-circle"></i>
+				</button> 
+				<a class="btn btn-default" href="#" ng-click="addTranslation(index)">
+
+					<i class="fa fa-check"></i>
+				</a>
+				<a class="btn btn-default" href="#">
+					<i ng-if="translation.user_lock" class="fa fa-unlock-alt"></i>
+					<i ng-if="!translation.user_lock" class="fa fa-lock"></i>
+				</a> 
+				<a class="btn btn-default" href="#">
+					<i ng-if="translation.admin_lock" class="fa fa-unlock"></i>
+					<i ng-if="!translation.admin_lock" class="fa fa-lock"></i>
+				</a> 
+			</div>
+		</div>
+	</form>
+	<div class="collapse" id="collapse{{ translation.id }}"> 
+		{{ preferedTranslations[index].translation }}
+	</br>
+    </div>
+</div>

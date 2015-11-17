@@ -43,6 +43,18 @@
     </div>
 {% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link 
+        rel="stylesheet" 
+        href="{{ asset('bundles/clarolineangulardatatable/js/release/dataTable.css') }}"
+    />
+    <link 
+        rel="stylesheet" 
+        href="{{ asset('bundles/clarolineangulardatatable/js/release/material.css') }}"
+    />
+{% endblock %}
+
 {% block javascripts %}
     {{ parent() }}
 
@@ -68,6 +80,9 @@
     %}
     <script type="text/javascript" src="{{ asset_url }}"></script>
     {% endjavascripts %}
+
+    <script type="text/javascript" src="{{ asset('bundles/clarolineangulardatatable/js/release/dataTable.helpers.min.js') }}">
+    </script>
 
     {# Set some vars needed by Angular parts #}
     <script type="text/javascript">

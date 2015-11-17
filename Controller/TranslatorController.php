@@ -28,19 +28,20 @@ class TranslatorController extends Controller
 
     /**         
      * @EXT\Route(
-     *     "/{vendor}/{bundle}/{lang}/latest.json", 
+     *     "/{vendor}/{bundle}/{lang}/{page}/latest.json", 
      *     name="claroline_translator_get_latest",
+     *     defaults={"page"=1},
      *     options={"expose"=true}
      * )
      *
      * @return Response
      */
-    public function getLastTranslationsAction($vendor, $bundle, $lang) {
+    public function getLastTranslationsAction($vendor, $bundle, $lang, $page) {
         $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
-        $translations = $translationManager->getLastTranslations($vendor, $bundle, $lang);
+        $translations = $translationManager->getLastTranslations($vendor, $bundle, $lang, $page);
         $context = new SerializationContext();
         $context->setGroups('translator');
-        $data = $this->container->get('serializer')->serialize($translations, 'json', $context); 
+        $data = $this->container->get('serializer')->serialize($translations, 'json', $context);
         $response = new JsonResponse();
         $response->setContent($data);
 
@@ -97,9 +98,12 @@ class TranslatorController extends Controller
      */
     public function loadTranslationsInfosAction($vendor, $bundle, $lang, $key)
     {
-        $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
-        $translations = $translationManager->getTranslationInfo($vendor, $bundle, $lang, $key);
-        $data = $this->container->get('serializer')->serialize($translations, 'json');
+        $translationManager = $this->container
+            ->get('claroline.translation.manager.translation_manager');
+        $translations = $translationManager
+            ->getTranslationInfo($vendor, $bundle, $lang, $key);
+        $data = $this->container
+            ->get('serializer')->serialize($translations, 'json');
 
         $response = new JsonResponse();
         $response->setContent($data);
@@ -141,5 +145,41 @@ class TranslatorController extends Controller
             ->getRepositories();
 
         return new JsonResponse($repositories);
+    }
+
+    /**              
+     * @EXT\Route(
+     *     "/{vendor}/{bundle}/{lang}/{key}/user/lock", 
+     *     name="claroline_translator_user_lock",
+     *     options={"expose"=true}
+     * )
+     *
+     * @return Response
+     */
+    public function clickUserLockAction($vendor, $bundle, $lang, $key)
+    {
+        $this->container
+            ->get('claroline.translation.manager.translation_manager')
+            ->lockUserAction($vendor, $bundle, $lang, $key);
+
+        return new JsonResponse();
+    }
+
+    /**              
+     * @EXT\Route(
+     *     "/{vendor}/{bundle}/{lang}/{key}/admin/lock", 
+     *     name="claroline_translator_admin_lock",
+     *     options={"expose"=true}
+     * )
+     *
+     * @return Response
+     */
+    public function clickAdminLockAction($vendor, $bundle, $lang, $key)
+    {
+        $this->container
+            ->get('claroline.translation.manager.translation_manager')
+            ->lockAdminAction($vendor, $bundle, $lang, $key);
+
+        return new JsonResponse();
     }
 }

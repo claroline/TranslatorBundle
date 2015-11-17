@@ -238,4 +238,14 @@ class TranslationItem
     {
         return $this->isUserLocked;
     }
+
+    public function changeUserLock()
+    {
+        $this->isUserLocked = !$this->isUserLocked;
+    }
+
+    public function changeAdminLock()
+    {
+        $this->isAdminLocked = !$this->isAdminLocked;
+    }
 } 
