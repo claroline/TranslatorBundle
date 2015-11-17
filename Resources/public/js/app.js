@@ -23,7 +23,7 @@ gitTranslator.config(function ($httpProvider) {
 });
 
 gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFactory, API) {
-	//$http.defaults.cache        = true;
+	$http.defaults.cache        = true;
 	$scope.lang                 = 'fr';
 	$scope.bundle               = 'CoreBundle';
 	$scope.vendor               = 'claroline';
@@ -33,9 +33,7 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 	$scope.translations         = [];
 	$scope.preferedLang         = 'fr';
 	$scope.preferedTranslations = [];
-	$scope.translationInfos     = '';
-	$scope.infos                = '';
-	$scope.paged                = [];
+	$scope.search               = '';
 
  	$scope.dataTableOptions = {
  		scrollbarV: false,
@@ -57,18 +55,39 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 		$scope.langs = d.data;
 	});    
 
-	var loadTranslations = function(type) {
+	var setTranslations = function(offset, size, translations) {
+		$scope.translations = translations;
+		$scope.dataTableOptions.paging.count = translations.length;
+
+		var set = translations.splice(offset * size, size);
+        // only insert items i don't already have
+          set.forEach(function(r, i){
+            var idx = i + (offset * size);
+            $scope.translations[idx] = r;
+        });
+	}
+
+	var loadTranslations = function(type, offset, size) {
+		if (!offset) offset = 0;
+		if (!size) size = 10;
+		if (!$scope.search !== '') search = $scope.search;
+
 		if (type === 'prefered' || type === 'all') {
-			API.load($scope.lang, $scope.vendor, $scope.bundle, $scope.currentPage).then(function(d) {
+			API.load($scope.preferedLang, $scope.vendor, $scope.bundle).then(function(d) {
 				$scope.preferedTranslations = d.data;
 			}); 
 		}
 
 		if (type === 'current' || type === 'all') {
-			API.load($scope.lang, $scope.vendor, $scope.bundle, $scope.currentPage).then(function(d) {
-				$scope.paged = $scope.translations = d.data;
-				$scope.dataTableOptions.paging.count = d.data.length
-			}); 
+			if (search !== '') {
+				API.search($scope.lang, $scope.vendor, $scope.bundle, search).then(function(d) {
+					setTranslations(offset, size, d.data);
+				});
+			} else {
+				API.load($scope.lang, $scope.vendor, $scope.bundle).then(function(d) {
+					setTranslations(offset, size, d.data);
+				}); 
+			}
 		}
 	}
 
@@ -102,6 +121,10 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 		}
 	}
 
+	$scope.loadTranslations = function(offset, size, search) {
+		loadTranslations('current', offset, size, search);
+	}
+
 	$scope.addTranslation = function(id, translation) {
 		var element = findById(id);
 
@@ -118,20 +141,6 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 			Routing.generate('claroline_translator_add_translation'),
 			data
 		);
-
-		/* DataTable doesn't seem to use the cache...
-		var httpCache = $cacheFactory.get('$http');
-		var cacheKey = Routing.generate(
-			'claroline_translator_get_latest', 
-			{'vendor': element.bundle, 'bundle': element.bundle, 'lang': $scope.lang, 'page': $scope.page }
-		);
-		var cachedResponse = httpCache.put(cacheKey, $scope.translations);
-
-		promise.then(function(d) {
-			reload from cache
-			loadTranslations('current');
-		});
-		*/
 	}
 
 	$scope.translationInfo = function(index) {
@@ -163,25 +172,24 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 	}
 
 	$scope.paging = function(offset, size) {
-
-		$scope.paged = $scope.translations.splice(offset * size, $scope.dataTableOptions.paging.count);
-		//why the fuck am I supposed to do this wizzardry ?
-		var pos = [offset * size, 0];
-		$scope.translations.splice.apply(
-			$scope.translations,
-			pos.concat($scope.paged)
-		);
+		loadTranslations('current', offset, size, $scope.search);
 	}
 });
 
 gitTranslator.factory('API', function($http) {
 	var api = {};
 
-	api.load = function(lang, vendor, bundle, page) {
+	api.load = function(lang, vendor, bundle) {
 		return $http.get(Routing.generate(
 			'claroline_translator_get_latest', 
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'page': page
-		}
+			{'vendor': vendor, 'bundle': bundle, 'lang': lang}
+		));
+	}
+
+	api.search = function(lang, vendor, bundle, search) {
+		return $http.get(Routing.generate(
+			'claroline_translator_search_latest',
+			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'search': search}
 		));
 	}
 
@@ -252,6 +260,16 @@ angular.module('gitTranslator').directive('preferedlang', [
         return {
         	restrict: 'E',
             templateUrl: AngularApp.webDir + 'bundles/clarolinetranslator/js/views/prefered.html',
+            replace: false
+        };
+    }
+]);
+
+angular.module('gitTranslator').directive('searchbar', [
+    function searchbar() {
+        return {
+        	restrict: 'E',
+            templateUrl: AngularApp.webDir + 'bundles/clarolinetranslator/js/views/searchbar.html',
             replace: false
         };
     }

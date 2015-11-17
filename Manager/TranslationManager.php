@@ -26,7 +26,6 @@ class TranslationManager
     use LoggableTrait;
 
     const BATCH_SIZE = 500;
-    const DQL_LIMIT = 99999;
 
     /**
      * @DI\InjectParams({
@@ -204,28 +203,21 @@ class TranslationManager
     public function getLastTranslations($vendor, $bundle, $lang, $currentCommit = true, $page = 1)
     {
         $commit = $this->getCurrentCommit($vendor . $bundle);
-        $last = array();
 
         $translations = $this->repository
-            ->findLastTranslations($vendor, $bundle, $commit, $lang, $page);
+            ->findLastTranslations($vendor, $bundle, $commit, $lang);
 
-        //this is way more efficient than the 'NOT EXISTS' for large requests
-        foreach ($translations as $translation) {
-            $last[$vendor . $bundle . $commit . $translation->getDomain() . $translation->getKey()] = $translation;
-        }
+        return $this->getLatestFromArray($translations);
+    }
 
-        //this is where we have to put the offset/limit.
-        $keys = array_keys($last);
-        $return = array();
+    public function searchLastTranslations($vendor, $bundle, $lang, $search, $currentCommit = true, $page = 1)
+    {
+        $commit = $this->getCurrentCommit($vendor . $bundle);
 
-        $start = $i = ($page - 1) * self::DQL_LIMIT;
-        $max = ($i + self::DQL_LIMIT > count($keys)) ? count($keys): $i + self::DQL_LIMIT;
+        $translations = $this->repository
+            ->searchLastTranslations($vendor, $bundle, $commit, $lang, $search);
 
-        for ($i = $start; $i < $max; $i++) {
-            $return[$keys[$i]] = $last[$keys[$i]];
-        }
-
-        return array_values($return);
+        return $this->getLatestFromArray($translations);
     }
 
     public function getTranslationInfo($vendor, $bundle, $lang, $key)
@@ -289,5 +281,23 @@ class TranslationManager
         }
 
         $this->om->flush();
+    }
+
+    private function getLatestFromArray(array $translations)
+    {
+        $last = array();
+        //this is way more efficient than the 'NOT EXISTS' for large requests
+        foreach ($translations as $translation) {
+            $last[
+                $translation->getVendor() . 
+                $translation->getBundle() . 
+                $translation->getCommit() . 
+                $translation->getDomain() . 
+                $translation->getKey()
+                ] 
+            = $translation;
+        }
+
+        return array_values($last);
     }
 }

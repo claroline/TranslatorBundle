@@ -28,17 +28,17 @@ class TranslatorController extends Controller
 
     /**         
      * @EXT\Route(
-     *     "/{vendor}/{bundle}/{lang}/{page}/latest.json", 
+     *     "/{vendor}/{bundle}/{lang}/latest.json", 
      *     name="claroline_translator_get_latest",
      *     defaults={"page"=1},
      *     options={"expose"=true}
      * )
-     *
      * @return Response
      */
-    public function getLastTranslationsAction($vendor, $bundle, $lang, $page) {
+    public function getLastTranslationsAction($vendor, $bundle, $lang) 
+    {
         $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
-        $translations = $translationManager->getLastTranslations($vendor, $bundle, $lang, $page);
+        $translations = $translationManager->getLastTranslations($vendor, $bundle, $lang);
         $context = new SerializationContext();
         $context->setGroups('translator');
         $data = $this->container->get('serializer')->serialize($translations, 'json', $context);
@@ -47,6 +47,29 @@ class TranslatorController extends Controller
 
         return $response;
     }
+
+
+    /**
+     * @EXT\Route(
+     *     "/{vendor}/{bundle}/{lang}/{page}/search/{search}/latest.json", 
+     *     name="claroline_translator_search_latest",
+     *     defaults={"page"=1},
+     *     options={"expose"=true}
+     * )
+     */
+    public function searchLastTranslationsAction($vendor, $bundle, $lang, $search) 
+    {
+        $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
+        $translations = $translationManager->searchLastTranslations($vendor, $bundle, $lang, $search);
+        $context = new SerializationContext();
+        $context->setGroups('translator');
+        $data = $this->container->get('serializer')->serialize($translations, 'json', $context);
+        $response = new JsonResponse();
+        $response->setContent($data);
+
+        return $response;
+    }
+
 
     /**              
      * @EXT\Route(

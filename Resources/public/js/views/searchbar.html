@@ -1,0 +1,20 @@
+<div class="input-group">
+    <input 
+        class="form-control" 
+        type="text" 
+        id="search-items-txt" 
+        ng-model="search"
+        placeholder="" 
+        value=""
+    >
+    </input>
+    <span class="input-group-btn">
+        <button 
+            class="filter btn btn-default" 
+            type="button" 
+            ng-click="loadTranslations('current', 0, 10)"   
+            id="search-button">
+            <i class="fa fa-search"></i>
+        </button>
+    </span>
+</div>
