@@ -2,18 +2,24 @@ var gitTranslator = angular.module('gitTranslator', ['data-table']);
 
 //let's do some initialization first.
 gitTranslator.config(function ($httpProvider) {
-	var stackedRequests = 0;
-
 	$httpProvider.interceptors.push(function ($q) {
 		return {
 			'request': function(config) {
-				stackedRequests++;
 				$('.please-wait').show();
 
 				return config;
 			},
+			'requestError': function(rejection) {
+				$('.please-wait').hide();
+
+				return $q.reject(rejection);
+			},	
+			'responseError': function(rejection) {
+				$('.please-wait').hide();
+
+				return $q.reject(rejection);
+			},
 			'response': function(response) {
-				stackedRequests--;
 				$('.please-wait').hide();
 
 				return response;
@@ -55,6 +61,19 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 		$scope.langs = d.data;
 	});    
 
+	var getCurrentCacheKey = function()
+	{
+		return $scope.search === '' ?
+			Routing.generate(
+				'claroline_translator_get_latest', 
+				{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang': $scope.lang}
+			):
+			Routing.generate(
+				'claroline_translator_search_latest', 
+				{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang': $scope.lang, 'search': $scope.search}
+			);
+	}
+
 	var setTranslations = function(offset, size, translations) {
 		$scope.translations = translations;
 		$scope.dataTableOptions.paging.count = translations.length;
@@ -79,6 +98,23 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 		}
 
 		if (type === 'current' || type === 'all') {
+			var httpCache = $cacheFactory.get('$http');
+			var fromCache = httpCache.get(getCurrentCacheKey());
+			if (fromCache) {
+				if (fromCache instanceof Array) {
+					if (fromCache[3] === "OK") {
+						var parsed = JSON.parse(fromCache[1]);
+					} else {
+						var parsed = fromCache;
+					}
+					setTranslations(offset, size, parsed);
+				} else {
+					fromCache.then(function(d) {
+						setTranslations(offset, size, JSON.parse(d.data));
+					});
+				}
+			}
+
 			if (search !== '') {
 				API.search($scope.lang, $scope.vendor, $scope.bundle, search).then(function(d) {
 					setTranslations(offset, size, d.data);
@@ -88,13 +124,6 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 					setTranslations(offset, size, d.data);
 				}); 
 			}
-		}
-	}
-
-	var findById = function(id) {
-		for (var i = 0; i < $scope.translations.length; i++) {
-			console.log($scope.translations[i].id);
-			if ($scope.translations[i].id == id) return $scope.translations[i];
 		}
 	}
 	
@@ -125,17 +154,18 @@ gitTranslator.controller('contentCtrl', function($scope, $log, $http, $cacheFact
 		loadTranslations('current', offset, size, search);
 	}
 
-	$scope.addTranslation = function(id, translation) {
-		var element = findById(id);
-
+	$scope.addTranslation = function(cell, row, col) {
 		var data = {
-			'key': element.key, 
-			'bundle': element.bundle, 
-			'vendor': element.vendor, 
-			'domain': element.domain,
-			'translation': element.translation,
+			'key': row.key, 
+			'bundle': row.bundle, 
+			'vendor': row.vendor, 
+			'domain': row.domain,
+			'translation': row.translation,
 			'lang': $scope.lang
 		};
+
+		var httpCache = $cacheFactory.get('$http');
+		var cachedResponse = httpCache.put(getCurrentCacheKey(), $scope.translations);
 
 		promise = $http.post(
 			Routing.generate('claroline_translator_add_translation'),
@@ -211,7 +241,7 @@ gitTranslator.factory('API', function($http) {
 	api.clickUserLock = function(lang, vendor, bundle, key) {
 		return $http.get(Routing.generate(
 			'claroline_translator_user_lock', 
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
+			{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang': lang, 'key': key}
 		));
 	}
 

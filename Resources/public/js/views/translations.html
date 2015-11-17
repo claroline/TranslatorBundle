@@ -3,7 +3,7 @@
 	rows="translations" 
 	class="material" 
 	on-page="paging(offset, size)"
->
+>	
     <column name="Key"></column>
     <column name="Translation">
 		<input 
@@ -11,6 +11,8 @@
 			value="{{ $row.translation }}"
 			class="form-control"
 			ng-model=$row.translation
+			ng-model-options="{ debounce: 1000 }"
+			ng-change="addTranslation($cell, $row, $column)"
 		>
 		</input>
     </column>
@@ -26,9 +28,6 @@
 		>
 			<i class="fa fa-info-circle"></i>
 		</button>
-		<a class="btn btn-default" href="#" ng-click="addTranslation($row.id, $row.translation)">
-			<i class="fa fa-check"></i>
-		</a>
 		<a class="btn btn-default" href="#">
 			<i ng-if="$row.user_lock" class="fa fa-unlock-alt"></i>
 			<i ng-if="!$row.user_lock" class="fa fa-lock"></i>
