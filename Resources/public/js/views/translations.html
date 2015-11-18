@@ -6,7 +6,7 @@
 >	
 	<column name='Translation'>
 		<div>
-			<div class="col-md-1">
+			<div class="col-md-1" align="center">
 				<a class="btn btn-default"
 					role="button"
 					data-toggle="collapse"
@@ -38,12 +38,18 @@
 				>
 				</input>
 			</div>
-			<div class="col-md-1">
+			<div class="col-md-2" align="center">
 				<button
 					class="btn btn-default"
 					ng-click="addTranslation($cell, $row, $column)"
 				>
 					<i class="fa fa-edit"></i>
+				</button>
+				<button
+					class="btn btn-default"
+					ng-click="startComment($row)"
+				>
+					<i class="fa fa-comment"></i>
 				</button>
 				<button class="btn btn-default" ng-click="clickUserLock($row)">
 					<i ng-if="!$row.user_lock" class="fa fa-check"></i>

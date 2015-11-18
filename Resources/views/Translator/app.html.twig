@@ -15,30 +15,29 @@
 
 {% block content %}
     <div class="panel panel-default" ng-app="gitTranslator">
-        <div class="panel-heading">
-            {{ 'repositories'|trans({}, 'platforms') }}
-        </div>
         <div class="panel-body" ng-controller="contentCtrl">
             <div class="col-md-2">
-                <div>
-                    <locales class="locale-list">
+                <div class="panel-body">
+                    <locales align="center" class="locale-list">
                     </locales>
                 </div>
-                <div>
+                <div class="panel-body">
                     <repositories class="list-group">
                     </repositories>
                 </div>
             </div>
             <div class="col-md-10">
-                <div>
-                    <preferedlang class="locale-list">
-                    </preferedlang>
+                <div class="container panel-body">
+                    <div class="col-md-3" align="center">
+                        <preferedlang class="locale-list">
+                        </preferedlang>
+                    </div>
+                    <div class="col-md-9" align="center">
+                        <searchbar>
+                        </searchbar>   
+                    </div>
                 </div>
-                <div>
-                    <searchbar>
-                    </searchbar>   
-                </div>
-                <div>
+                <div class="panel-body">
                     <translations>
                     </translations>
                 </div>

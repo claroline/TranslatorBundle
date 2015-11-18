@@ -263,6 +263,10 @@ gitTranslator.controller('contentCtrl', function(
 		loadTranslations('current');
 		loadTranslations('prefered');
 	}
+
+	$scope.startComment = function(row) {
+		API.startComment($scope.lang, row.vendor, row.bundle, row.key);
+	}
 });
 
 gitTranslator.factory('API', function($http) {
@@ -309,6 +313,10 @@ gitTranslator.factory('API', function($http) {
 			'claroline_translator_admin_lock', 
 			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
 		));
+	}
+
+	api.startComment = function(lang, vendor, bundle, key) {
+		console.log('do something');
 	}
 
 	return api;
