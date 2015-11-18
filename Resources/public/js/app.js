@@ -40,10 +40,10 @@ gitTranslator.controller('contentCtrl', function(
 	$scope.bundle               = 'CoreBundle';
 	$scope.vendor               = 'claroline';
 	$scope.repository           = 'clarolineCoreBundle';
+	$scope.preferedLang         = 'fr';
 	$scope.$log                 = $log;
 	$scope.$langs               = ['fr', 'en'];
 	$scope.translations         = [];
-	$scope.preferedLang         = 'fr';
 	$scope.preferedTranslations = [];
 	$scope.search               = '';
 
@@ -71,103 +71,112 @@ gitTranslator.controller('contentCtrl', function(
 		$scope.langs = d.data;
 	});    
 
-	var getCurrentCacheKey = function() {
+	var getCurrentCacheKey = function(type) {
+		var lang = type === 'prefered' ? $scope.preferedLang: $scope.lang;
+
 		return $scope.search === '' ?
 			Routing.generate(
 				'claroline_translator_get_latest', 
-				{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang': $scope.lang}
+				{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang':  lang}
 			):
 			Routing.generate(
 				'claroline_translator_search_latest', 
-				{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang': $scope.lang, 'search': $scope.search}
+				{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang': lang, 'search': $scope.search}
 			);
 	}
 
-	var setTranslations = function(offset, size, translations) {
-  		var cache = translations;
+	var setTranslations = function(type, offset, size, translations) {
+		//cloning the object...
   		var cache = JSON.parse(JSON.stringify(translations));
+  		console.log(type);
 
-		$scope.translations = translations;
+		if (type === 'current' ) {
+			$scope.translations = translations;
+		} else {
+			$scope.preferedTranslations = translations;
+		}
+
 		$scope.dataTableOptions.paging.count = translations.length;
 
+		console.log('splice at ', offset, size);
 		var set = translations.splice(offset * size, size);
         // only insert items i don't already have
-          set.forEach(function(r, i) {
+        set.forEach(function(r, i) {
             var idx = i + (offset * size);
-            $scope.translations[idx] = r;
+
+            if (type === 'current') {
+            	$scope.translations[idx] = r;
+            } else {
+            	$scope.preferedTranslations[idx] = r;
+            }
+            
         });
 
         var httpCache = $cacheFactory.get('$http');
-        var cachedResponse = httpCache.put(getCurrentCacheKey(), cache);
+        var cachedResponse = httpCache.put(getCurrentCacheKey(type), cache);
 	}
 
-	var loadTranslations = function() {
-		var offset = $scope.dataTableOptions.paging.offset;
-		var size = $scope.dataTableOptions.paging.size;	
-		var search = $scope.search;
-
+	var loadTranslations = function(type) {
+		var offset    = $scope.dataTableOptions.paging.offset || 0;
+		var size      = $scope.dataTableOptions.paging.size || 10;	
+		var search    = $scope.search;
 		var httpCache = $cacheFactory.get('$http');
-		var fromCache = httpCache.get(getCurrentCacheKey());
+		var fromCache = httpCache.get(getCurrentCacheKey(type));
 
-		//angular cache system is wtf
 		if (fromCache) {
+			console.log('from cache at url', getCurrentCacheKey(type));
 			if (fromCache instanceof Array) {
 				if (fromCache[3] === "OK") {
 					var parsed = JSON.parse(fromCache[1]);
 				} else {
 					var parsed = fromCache;
 				}
-				setTranslations(offset, size, parsed);
+				setTranslations(type, offset, size, parsed);
 			} else {
 				fromCache.then(function(d) {
-					setTranslations(offset, size, JSON.parse(d.data));
+					setTranslations(type, offset, size, JSON.parse(d.data));
 				});
 			}
+
+			return;
 		}
 
-		if (search !== '') {
-			API.search($scope.lang, $scope.vendor, $scope.bundle, search).then(function(d) {
-				setTranslations(offset, size, d.data);
-			});
-		} else {
-			API.load($scope.lang, $scope.vendor, $scope.bundle).then(function(d) {
-				setTranslations(offset, size, d.data);
-			}); 
+		if (type === 'current') {
+			if (search !== '') {
+				API.search($scope.lang, $scope.vendor, $scope.bundle, search).then(function(d) {
+					setTranslations(type, offset, size, d.data);
+				});
+			} else {
+				API.load($scope.lang, $scope.vendor, $scope.bundle).then(function(d) {
+					setTranslations(type, offset, size, d.data);
+				}); 
+			}
+		} 
 
+		if (type === 'prefered') {
+			if ($scope.search !== '') {
+				API.search($scope.preferedLang, $scope.vendor, $scope.bundle, search).then(function(d) {
+					setTranslations(type, offset, size, d.data);
+				}); 
+			} else {
+				API.load($scope.preferedLang, $scope.vendor, $scope.bundle).then(function(d) {
+					setTranslations(type, offset, size, d.data);
+				}); 
+			}		
 		}
-
-		console.log($scope.search);
-		if ($scope.search !== '') {
-			API.search($scope.preferedLang, $scope.vendor, $scope.bundle, search).then(function(d) {
-				$scope.preferedTranslations = d.data;
-
-				if ($scope.search !== '') {
-					var set = d.data.splice(offset * size, size);
-			        // only insert items i don't already have
-			          set.forEach(function(r, i){
-			            var idx = i + (offset * size);
-			            $scope.preferedTranslations[idx] = r;
-			        });
-				}
-			}); 
-		} else {
-			API.load($scope.preferedLang, $scope.vendor, $scope.bundle).then(function(d) {
-				$scope.preferedTranslations = d.data;
-			}); 
-		}
-
 	}
 	
-	loadTranslations();   
+	loadTranslations('current');  
+	loadTranslations('prefered'); 
 
 	$scope.setPreferedLang = function(lang) {
 		$scope.preferedLang = lang;
-		loadTranslations();
+		loadTranslations('prefered');
 	}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 
 	$scope.setLang = function(lang) {
 		$scope.lang = lang;
-		loadTranslations();
+		loadTranslations('current');
 	} 
 
 	$scope.setRepository = function(repository) {
@@ -176,7 +185,8 @@ gitTranslator.controller('contentCtrl', function(
 		    	$scope.vendor = key;
 		    	$scope.bundle = repository[key];
 		    	$scope.repository = $scope.vendor + $scope.bundle;
-		    	loadTranslations();
+		    	loadTranslations('current');
+		    	loadTranslations('prefered');
 		    }
 		}
 	}
@@ -238,7 +248,8 @@ gitTranslator.controller('contentCtrl', function(
 	}
 
 	$scope.paging = function(offset, size) {
-		loadTranslations(offset, size, $scope.search);
+		loadTranslations('current');
+		loadTranslations('prefered');
 	}
 
 	$scope.getPreferedTranslation = function(cell, row, col) {
@@ -250,7 +261,8 @@ gitTranslator.controller('contentCtrl', function(
 	}
 
 	$scope.loadTranslations = function() {
-		loadTranslations();
+		loadTranslations('current');
+		loadTranslations('prefered');
 	}
 });
 
