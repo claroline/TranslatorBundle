@@ -41,7 +41,7 @@ class TranslationItem
 
     /**
      * @ORM\Column(name="translation_value", type="text")
-     * @Groups({"translator"})     
+     * @Groups({"translator", "infos"})     
      * @SerializedName("translation")
      */
     protected $translation;
@@ -70,7 +70,7 @@ class TranslationItem
     /**
      * @ORM\Column(name="creation_date", type="datetime")
      * @Gedmo\Timestampable(on="create")
-     * @Groups({"translator"})
+     * @Groups({"translator", "infos"})
      * @SerializedName("creationDate")
      */
     protected $creationDate;
@@ -100,8 +100,8 @@ class TranslationItem
 
     /**  
      * @SerializedName("author")
-     * @Groups({"translator"})
      * @Accessor(getter="getAuthor")
+     * @Groups({"infos"})
      */
     protected $author;
 
@@ -223,7 +223,7 @@ class TranslationItem
 
     public function getAuthor()
     {
-        return null;
+        return $this->creator ? $this->creator->getUsername(): 'claroline';
     }
 
     public function setIsAdminLocked($boolean)

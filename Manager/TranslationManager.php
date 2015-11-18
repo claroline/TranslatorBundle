@@ -227,7 +227,7 @@ class TranslationManager
             'bundle' => $bundle, 
             'lang'   => $lang, 
             'key'    => $key
-        ));
+        ), array('id' => 'DESC'));
 
         return $translations;
     }
@@ -259,7 +259,7 @@ class TranslationManager
         return array('fr', 'en', 'nl', 'de', 'es');
     }
 
-    public function clickUserLockAction($vendor, $bundle, $lang, $key)
+    public function clickUserLock($vendor, $bundle, $lang, $key)
     {
         $translations = $this->getTranslationInfo($vendor, $bundle, $lang, $key);
 
@@ -271,7 +271,7 @@ class TranslationManager
         $this->om->flush();
     }
 
-    public function clickAdminLockAction($vendor, $bundle, $lang, $key)
+    public function clickAdminLock($vendor, $bundle, $lang, $key)
     {
         $translations = $this->getTranslationInfo($vendor, $bundle, $lang, $key);
 

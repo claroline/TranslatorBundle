@@ -4,20 +4,9 @@
 	class="material" 
 	on-page="paging(offset, size)"
 >	
-	<column>
+	<column name='Translation'>
 		<div>
-			<div class="col-md-10">
-				<input 
-					type="text" 
-					value="{{ $row.translation }}"
-					class="form-control"
-					ng-model=$row.translation
-					ng-model-options="{ debounce: 1000 }"
-					ng-change="addTranslation($cell, $row, $column)"
-				>
-				</input>
-			</div>
-			<div class="col-md-2">
+			<div class="col-md-1">
 				<a class="btn btn-default"
 					role="button"
 					data-toggle="collapse"
@@ -27,24 +16,55 @@
 				>
 					<i class="fa fa-sort-desc"></i>
 				</a>
-				<button
-				    type="button"
+				<a
 					class="btn btn-default"
+				    role="button"
+					data-toggle="collapse"
+					href="#info{{ $row.id }}"
+					aria-controls="info{{ $row.id }}"
+					aria-expanded="true"
+					ng-click="loadInfos($row)"
 				>
 					<i class="fa fa-info-circle"></i>
+				</a>
+			</div>
+			<div class="col-md-9">
+				<input 
+					type="text" 
+					value="{{ $row.translation }}"
+					class="form-control"
+					ng-model=$row.translation
+					ng-model-options="{ debounce: 1000 }"
+				>
+				</input>
+			</div>
+			<div class="col-md-1">
+				<button
+					class="btn btn-default"
+					ng-click="addTranslation($cell, $row, $column)"
+				>
+					<i class="fa fa-edit"></i>
 				</button>
-				<button class="btn btn-default" ng-click"clickUserLock($cell, $row, $column)">
-					<i ng-if="$row.user_lock" class="fa fa-unlock-alt"></i>
-					<i ng-if="!$row.user_lock" class="fa fa-lock"></i>
+				<button class="btn btn-default" ng-click="clickUserLock($row)">
+					<i ng-if="!$row.user_lock" class="fa fa-check"></i>
+					<i ng-if="$row.user_lock" class="fa fa-close"></i>
 				</button>
-				<button class="btn btn-default" ng-click"clickAdminLock($cell, $row, $column)">
-					<i ng-if="$row.admin_lock" class="fa fa-unlock"></i>
-					<i ng-if="!$row.admin_lock" class="fa fa-lock"></i>
+				<button class="btn btn-default" ng-click="clickAdminLock($row)">
+					<i ng-if="!$row.admin_lock" class="fa fa-unlock"></i>
+					<i ng-if="$row.admin_lock" class="fa fa-lock"></i>
 				</button>
 			</div>
 		</div>
 		<div class="collapse" style="clear: left;" id="collapse{{ $row.id }}">
 			{{ getPreferedTranslation($cell, $row, $column) }}
+		</div>
+		<div class="collapse" style="clear: left;" id="info{{ $row.id }}">
+			Historique des traductions:
+				<ul> 
+					<li ng-repeat="translationInfo in translationInfos[$row.id]">
+						{{ ::translationInfo.translation }} (créé par {{ ::translationInfo.author }} le {{ ::translationInfo.creationDate }})
+					</li>
+				</ul>
 		</div>
 	</column>
 </dtable>

@@ -123,10 +123,12 @@ class TranslatorController extends Controller
     {
         $translationManager = $this->container
             ->get('claroline.translation.manager.translation_manager');
+        $context = new SerializationContext();
+        $context->setGroups('infos');
         $translations = $translationManager
             ->getTranslationInfo($vendor, $bundle, $lang, $key);
         $data = $this->container
-            ->get('serializer')->serialize($translations, 'json');
+            ->get('serializer')->serialize($translations, 'json', $context);
 
         $response = new JsonResponse();
         $response->setContent($data);
@@ -183,7 +185,7 @@ class TranslatorController extends Controller
     {
         $this->container
             ->get('claroline.translation.manager.translation_manager')
-            ->lockUserAction($vendor, $bundle, $lang, $key);
+            ->clickUserLock($vendor, $bundle, $lang, $key);
 
         return new JsonResponse();
     }
@@ -201,7 +203,7 @@ class TranslatorController extends Controller
     {
         $this->container
             ->get('claroline.translation.manager.translation_manager')
-            ->lockAdminAction($vendor, $bundle, $lang, $key);
+            ->clickAdminLock($vendor, $bundle, $lang, $key);
 
         return new JsonResponse();
     }

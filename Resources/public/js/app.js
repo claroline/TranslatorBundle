@@ -1,4 +1,4 @@
-var gitTranslator = angular.module('gitTranslator', ['data-table']);
+var gitTranslator = angular.module('gitTranslator', ['data-table', 'ui.bootstrap']);
 
 //let's do some initialization first.
 gitTranslator.config(function ($httpProvider) {
@@ -46,12 +46,12 @@ gitTranslator.controller('contentCtrl', function(
 	$scope.translations         = [];
 	$scope.preferedTranslations = [];
 	$scope.search               = '';
+	$scope.translationInfos     = [];
 
  	$scope.dataTableOptions = {
  		scrollbarV: false,
  		columnMode: 'force',
- 		rowHeight: 50,
-        headerHeight: 50,
+        headerHeight: 0,
         footerHeight: 50,
  		paging: {
  			externalPaging: true,
@@ -62,6 +62,12 @@ gitTranslator.controller('contentCtrl', function(
  			prop: "translation"
  		}]
  	}
+
+ 	$scope.infoPopover = {
+ 		content: 'Hello world',
+ 		templateUrl: AngularApp.webDir + 'bundles/clarolinetranslator/js/views/infos.html',
+ 		title:'Title'
+ 	};
 
 	API.repositories().then(function(d) {
 		$scope.repositories = d.data;
@@ -88,7 +94,6 @@ gitTranslator.controller('contentCtrl', function(
 	var setTranslations = function(type, offset, size, translations) {
 		//cloning the object...
   		var cache = JSON.parse(JSON.stringify(translations));
-  		console.log(type);
 
 		if (type === 'current' ) {
 			$scope.translations = translations;
@@ -98,7 +103,6 @@ gitTranslator.controller('contentCtrl', function(
 
 		$scope.dataTableOptions.paging.count = translations.length;
 
-		console.log('splice at ', offset, size);
 		var set = translations.splice(offset * size, size);
         // only insert items i don't already have
         set.forEach(function(r, i) {
@@ -116,6 +120,20 @@ gitTranslator.controller('contentCtrl', function(
         var cachedResponse = httpCache.put(getCurrentCacheKey(type), cache);
 	}
 
+	var cacheRow = function(row) {
+		//This stupid plugin needs the array splice function and truncate every results.
+		//Because of the this the cache handling is... let's say annoying.
+		var httpCache = $cacheFactory.get('$http');
+		var fromCache = httpCache.get(getCurrentCacheKey());
+		var parsed = fromCache;
+
+		for (var i = 0; i < parsed.length; i++) {
+			if (parsed[i].id === row.id) parsed[i] = row;
+		}
+
+		var cachedResponse = httpCache.put(getCurrentCacheKey(), parsed);
+	}
+
 	var loadTranslations = function(type) {
 		var offset    = $scope.dataTableOptions.paging.offset || 0;
 		var size      = $scope.dataTableOptions.paging.size || 10;	
@@ -124,7 +142,6 @@ gitTranslator.controller('contentCtrl', function(
 		var fromCache = httpCache.get(getCurrentCacheKey(type));
 
 		if (fromCache) {
-			console.log('from cache at url', getCurrentCacheKey(type));
 			if (fromCache instanceof Array) {
 				if (fromCache[3] === "OK") {
 					var parsed = JSON.parse(fromCache[1]);
@@ -201,17 +218,7 @@ gitTranslator.controller('contentCtrl', function(
 			'lang': $scope.lang
 		};
 
-		//This stupid plugin needs the array splice function and truncate every results.
-		//Because of the this the cache handling is... let's say annoying.
-		var httpCache = $cacheFactory.get('$http');
-		var fromCache = httpCache.get(getCurrentCacheKey());
-		var parsed = fromCache;
-
-		for (var i = 0; i < parsed.length; i++) {
-			if (parsed[i].id === row.id) parsed[i] = row;
-		}
-
-		var cachedResponse = httpCache.put(getCurrentCacheKey(), parsed);
+		cacheRow(row);
 
 		promise = $http.post(
 			Routing.generate('claroline_translator_add_translation'),
@@ -219,31 +226,23 @@ gitTranslator.controller('contentCtrl', function(
 		);
 	}
 
-	$scope.translationInfo = function(index) {
-		var element = $scope.translations[index];
-		$scope.infos = '';
-
-		API.translationsInfo($scope.lang, element.vendor, element.bundle, element.key).then(function(d) {
-			$scope.translationInfos = d.data;
-			for (var i = 0; i < $scope.translationInfos.length; i++) {
-				$scope.infos += $scope.translationInfos[i].translation;
-			}
+	$scope.loadInfos = function(row) {
+		API.translationsInfo($scope.lang, row.vendor, row.bundle, row.key).then(function(d) {
+			$scope.translationInfos[row.id] = d.data;
 		});
 	}
 
-	$scope.clickAdminLock = function(index) {
-		var element = $scope.translations[index];
-
-		api.clickUserLock($scope.lang, element.vendor, element.bundle, element.key).then(function(d) {
-			console.log('user lock');
+	$scope.clickAdminLock = function(row) {
+		API.clickAdminLock($scope.lang, row.vendor, row.bundle, row.key).then(function(d) {
+			row.admin_lock = !row.admin_lock;
+			cacheRow(row);
 		});
 	}
 
-	$scope.clickUserLock = function(index) {
-		var element = $scope.translations[index];
-
-		api.clickUserLock($scope.lang, element.vendor, element.bundle, element.key).then(function(d) {
-			console.log('admin lock');
+	$scope.clickUserLock = function(row) {
+		API.clickUserLock(row.lang, row.vendor, row.bundle, row.key).then(function(d) {
+			row.user_lock = !row.user_lock;
+			cacheRow(row);
 		});
 	}
 
@@ -299,14 +298,14 @@ gitTranslator.factory('API', function($http) {
 	}
 
 	api.clickUserLock = function(lang, vendor, bundle, key) {
-		return $http.get(Routing.generate(
+		return $http.post(Routing.generate(
 			'claroline_translator_user_lock', 
-			{'vendor': $scope.vendor, 'bundle': $scope.bundle, 'lang': lang, 'key': key}
+			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
 		));
 	}
 
 	api.clickAdminLock = function(lang, vendor, bundle, key) {
-		return $http.get(Routing.generate(
+		return $http.post(Routing.generate(
 			'claroline_translator_admin_lock', 
 			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
 		));
