@@ -71,8 +71,7 @@ gitTranslator.controller('contentCtrl', function(
 		$scope.langs = d.data;
 	});    
 
-	var getCurrentCacheKey = function()
-	{
+	var getCurrentCacheKey = function() {
 		return $scope.search === '' ?
 			Routing.generate(
 				'claroline_translator_get_latest', 
@@ -85,27 +84,32 @@ gitTranslator.controller('contentCtrl', function(
 	}
 
 	var setTranslations = function(offset, size, translations) {
-		//if (offset == -1) offset = 0;
+  		var cache = translations;
+  		var cache = JSON.parse(JSON.stringify(translations));
+
 		$scope.translations = translations;
 		$scope.dataTableOptions.paging.count = translations.length;
-		//if (offset * size > translations.length) $scope.dataTableOptions.paging.offset = 0;
 
 		var set = translations.splice(offset * size, size);
         // only insert items i don't already have
-          set.forEach(function(r, i){
+          set.forEach(function(r, i) {
             var idx = i + (offset * size);
             $scope.translations[idx] = r;
         });
+
+        var httpCache = $cacheFactory.get('$http');
+        var cachedResponse = httpCache.put(getCurrentCacheKey(), cache);
 	}
 
-	var loadTranslations = function(offset, size) {
-		if (!offset) offset = 0;
-		if (!size) size = 10;
-		if (!$scope.search !== '') search = $scope.search;
+	var loadTranslations = function() {
+		var offset = $scope.dataTableOptions.paging.offset;
+		var size = $scope.dataTableOptions.paging.size;	
+		var search = $scope.search;
 
 		var httpCache = $cacheFactory.get('$http');
 		var fromCache = httpCache.get(getCurrentCacheKey());
 
+		//angular cache system is wtf
 		if (fromCache) {
 			if (fromCache instanceof Array) {
 				if (fromCache[3] === "OK") {
@@ -132,23 +136,33 @@ gitTranslator.controller('contentCtrl', function(
 
 		}
 
-		API.load($scope.preferedLang, $scope.vendor, $scope.bundle).then(function(d) {
-			$scope.preferedTranslations = d.data;
+		console.log($scope.search);
+		if ($scope.search !== '') {
+			API.search($scope.preferedLang, $scope.vendor, $scope.bundle, search).then(function(d) {
+				$scope.preferedTranslations = d.data;
 
-			var set = d.data.splice(offset * size, size);
-	        // only insert items i don't already have
-	          set.forEach(function(r, i){
-	            var idx = i + (offset * size);
-	            $scope.preferedTranslations[idx] = r;
-	        });
-		}); 
+				if ($scope.search !== '') {
+					var set = d.data.splice(offset * size, size);
+			        // only insert items i don't already have
+			          set.forEach(function(r, i){
+			            var idx = i + (offset * size);
+			            $scope.preferedTranslations[idx] = r;
+			        });
+				}
+			}); 
+		} else {
+			API.load($scope.preferedLang, $scope.vendor, $scope.bundle).then(function(d) {
+				$scope.preferedTranslations = d.data;
+			}); 
+		}
+
 	}
 	
 	loadTranslations();   
 
 	$scope.setPreferedLang = function(lang) {
 		$scope.preferedLang = lang;
-		loadTranslations()
+		loadTranslations();
 	}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 
 	$scope.setLang = function(lang) {
@@ -167,10 +181,6 @@ gitTranslator.controller('contentCtrl', function(
 		}
 	}
 
-	$scope.loadTranslations = function(offset, size, search) {
-		loadTranslations(offset, size, search);
-	}
-
 	$scope.addTranslation = function(cell, row, col) {
 		var data = {
 			'key': row.key, 
@@ -181,11 +191,11 @@ gitTranslator.controller('contentCtrl', function(
 			'lang': $scope.lang
 		};
 
+		//This stupid plugin needs the array splice function and truncate every results.
+		//Because of the this the cache handling is... let's say annoying.
 		var httpCache = $cacheFactory.get('$http');
-
-		
 		var fromCache = httpCache.get(getCurrentCacheKey());
-		var parsed = JSON.parse(fromCache[1]);
+		var parsed = fromCache;
 
 		for (var i = 0; i < parsed.length; i++) {
 			if (parsed[i].id === row.id) parsed[i] = row;
@@ -237,6 +247,10 @@ gitTranslator.controller('contentCtrl', function(
 		return (typeof $scope.preferedTranslations[idx] !== 'undefined') ?
 			$scope.preferedTranslations[idx].translation:
 			'not found';
+	}
+
+	$scope.loadTranslations = function() {
+		loadTranslations();
 	}
 });
 
