@@ -286,18 +286,12 @@ class TranslationManager
     private function getLatestFromArray(array $translations)
     {
         $last = array();
+        $sorted = [];
         //this is way more efficient than the 'NOT EXISTS' for large requests
         foreach ($translations as $translation) {
-            $last[
-                $translation->getVendor() . 
-                $translation->getBundle() . 
-                $translation->getCommit() . 
-                $translation->getDomain() . 
-                $translation->getKey()
-                ] 
-            = $translation;
+            $last[$translation->getIndex()] = $translation;
         }
 
-        return array_values($last);
+        return array_values($last);       
     }
 }

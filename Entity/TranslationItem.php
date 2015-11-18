@@ -119,6 +119,13 @@ class TranslationItem
      */
     protected $isAdminLocked = false;
 
+    /**
+     * @Groups({"translator"})
+     * @SerializedName("idx")
+     * @Accessor(getter="getIndex")
+     */
+    protected $idx;
+
     public function getId()
     {
         return $this->id;
@@ -247,5 +254,14 @@ class TranslationItem
     public function changeAdminLock()
     {
         $this->isAdminLocked = !$this->isAdminLocked;
+    }
+
+    public function getIndex()
+    {
+        return $this->getVendor() . 
+            $this->getBundle() . 
+            $this->getCommit() . 
+            $this->getDomain() . 
+            $this->getKey();
     }
 } 

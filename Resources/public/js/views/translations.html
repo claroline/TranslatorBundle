@@ -4,37 +4,47 @@
 	class="material" 
 	on-page="paging(offset, size)"
 >	
-    <column name="Key"></column>
-    <column name="Translation">
-		<input 
-			type="text" 
-			value="{{ $row.translation }}"
-			class="form-control"
-			ng-model=$row.translation
-			ng-model-options="{ debounce: 1000 }"
-			ng-change="addTranslation($cell, $row, $column)"
-		>
-		</input>
-    </column>
-    <column>
-  		<a class="btn btn-default"
-			role="button"
-		>
-			<i class="fa fa-sort-desc"></i>
-		</a>
-		<button
-		    type="button"
-			class="btn btn-default"
-		>
-			<i class="fa fa-info-circle"></i>
-		</button>
-		<a class="btn btn-default" href="#">
-			<i ng-if="$row.user_lock" class="fa fa-unlock-alt"></i>
-			<i ng-if="!$row.user_lock" class="fa fa-lock"></i>
-		</a>
-		<a class="btn btn-default" href="#">
-			<i ng-if="$row.admin_lock" class="fa fa-unlock"></i>
-			<i ng-if="!$row.admin_lock" class="fa fa-lock"></i>
-		</a>
-    </column>
+	<column>
+		<div>
+			<div class="col-md-10">
+				<input 
+					type="text" 
+					value="{{ $row.translation }}"
+					class="form-control"
+					ng-model=$row.translation
+					ng-model-options="{ debounce: 1000 }"
+					ng-change="addTranslation($cell, $row, $column)"
+				>
+				</input>
+			</div>
+			<div class="col-md-2">
+				<a class="btn btn-default"
+					role="button"
+					data-toggle="collapse"
+					href="#collapse{{ $row.id }}"
+					aria-controls="collapse{{ $row.id }}"
+					aria-expanded="true"
+				>
+					<i class="fa fa-sort-desc"></i>
+				</a>
+				<button
+				    type="button"
+					class="btn btn-default"
+				>
+					<i class="fa fa-info-circle"></i>
+				</button>
+				<button class="btn btn-default" ng-click"clickUserLock($cell, $row, $column)">
+					<i ng-if="$row.user_lock" class="fa fa-unlock-alt"></i>
+					<i ng-if="!$row.user_lock" class="fa fa-lock"></i>
+				</button>
+				<button class="btn btn-default" ng-click"clickAdminLock($cell, $row, $column)">
+					<i ng-if="$row.admin_lock" class="fa fa-unlock"></i>
+					<i ng-if="!$row.admin_lock" class="fa fa-lock"></i>
+				</button>
+			</div>
+		</div>
+		<div class="collapse" style="clear: left;" id="collapse{{ $row.id }}">
+			{{ getPreferedTranslation($cell, $row, $column) }}
+		</div>
+	</column>
 </dtable>
