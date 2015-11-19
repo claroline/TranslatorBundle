@@ -16,33 +16,44 @@ use Doctrine\ORM\Query;
 
 class TranslationItemRepository extends EntityRepository
 {
-	public function findLastTranslations($vendor, $bundle, $commit, $lang)
+	public function findLastTranslations($vendor, $bundle, $commit, $lang, $showAll = true)
 	{
-		$dql = 'SELECT i FROM Claroline\TranslatorBundle\Entity\TranslationItem i
+		$dql = 'SELECT i, t FROM Claroline\TranslatorBundle\Entity\TranslationItem i
+			LEFT JOIN i.translations t
 			WHERE i.vendor LIKE :vendor AND
 			i.bundle LIKE :bundle AND
 			i.commit LIKE :commit AND
 			i.lang LIKE :lang  
 		';
 
+		if (!$showAll) $dql .= 'AND i.isAdminLocked = :adminLocked';
+
         $query = $this->_em->createQuery($dql);
         $query->setParameter('vendor', $vendor);
         $query->setParameter('bundle', $bundle);
-        $query->setParameter('commit', $commit);
+        $query->setParameter('commit', $commit); 
         $query->setParameter('lang', $lang);
+
+        if (!$showAll) $query->setParameter('adminLocked', false);
 
         return $query->getResult();
 	}
 
-	public function searchLastTranslations($vendor, $bundle, $commit, $lang, $search)
+	public function searchLastTranslations($vendor, $bundle, $commit, $lang, $search, $showAll = true)
 	{
-		$dql = 'SELECT i FROM Claroline\TranslatorBundle\Entity\TranslationItem i
+		$dql = 'SELECT i, t FROM Claroline\TranslatorBundle\Entity\TranslationItem i
+			LEFT JOIN i.translations t
 			WHERE i.vendor LIKE :vendor AND
 			i.bundle LIKE :bundle AND
 			i.commit LIKE :commit AND
 			i.lang LIKE :lang AND 
-			i.translation LIKE :search
+			(
+				t.translation LIKE :search OR 
+				i.key LIKE :search
+			)
 		';
+
+		if (!$showAll) $dql .= 'AND i.isAdminLocked = :adminLocked';
 
         $query = $this->_em->createQuery($dql);
         $query->setParameter('vendor', $vendor);
@@ -50,6 +61,9 @@ class TranslationItemRepository extends EntityRepository
         $query->setParameter('commit', $commit);
         $query->setParameter('lang', $lang);
         $query->setParameter('search', "%{$search}%");
+
+        if (!$showAll) $query->setParameter('adminLocked', false);
+
 
         return $query->getResult();
 	}

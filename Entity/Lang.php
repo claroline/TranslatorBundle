@@ -16,7 +16,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="claro__git_Lang")
+ * @ORM\Table(name="claro__git_lang")
  */
 class Lang
 {

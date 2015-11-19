@@ -13,6 +13,7 @@ use JMS\SecurityExtraBundle\Annotation as SEC;
 use Claroline\TranslatorBundle\Form\TranslatorType;
 use Claroline\ForumBundle\Entity\Subject;
 use Claroline\ForumBundle\Entity\Message;
+use Claroline\TranslatorBundle\Entity\TranslationItem;
 
 class TranslatorController extends Controller
 {
@@ -108,22 +109,10 @@ class TranslatorController extends Controller
         $this->checkIsTranslator();
 
         $translationManager = $this->container->get('claroline.translation.manager.translation_manager');
-
         $value  = $this->get('request')->request->get('translation');
-        $vendor = $this->get('request')->request->get('vendor');
-        $bundle = $this->get('request')->request->get('bundle');
-        $domain = $this->get('request')->request->get('domain');
-        $lang   = $this->get('request')->request->get('lang');
-        $key    = $this->get('request')->request->get('key');
-
-        $translation = $translationManager->addTranslation(
-            $vendor,
-            $bundle,
-            $domain,
-            $lang,
-            $key,
-            $value
-        );
+        $translationItem = $this->get('request')->request->get('translation_item');
+        $translationItem = $translationManager->find($translationItem);
+        $translation = $translationManager->addTranslation($translationItem, $value);
 
         $context = new SerializationContext();
         $context->setGroups('translator');
@@ -153,7 +142,7 @@ class TranslatorController extends Controller
         $context = new SerializationContext();
         $context->setGroups('infos');
         $translations = $translationManager
-            ->getTranslationInfo($vendor, $bundle, $domain, $lang, $key);
+            ->getTranslationItem($vendor, $bundle, $domain, $lang, $key);
         $data = $this->container
             ->get('serializer')->serialize($translations, 'json', $context);
 
@@ -205,69 +194,62 @@ class TranslatorController extends Controller
 
     /**              
      * @EXT\Route(
-     *     "/{vendor}/{bundle}/{domain}/{lang}/{key}/user/lock", 
+     *     "/{translationItem}/user/lock", 
      *     name="claroline_translator_user_lock",
      *     options={"expose"=true}
      * )
      *
      * @return Response
      */
-    public function clickUserLockAction($vendor, $bundle, $domain, $lang, $key)
+    public function clickUserLockAction(TranslationItem $translationItem)
     {
         $this->checkIsTranslator();
 
         $this->container
             ->get('claroline.translation.manager.translation_manager')
-            ->clickUserLock($vendor, $bundle, $domain, $lang, $key);
+            ->clickUserLock($translationItem);
 
         return new JsonResponse();
     }
 
     /**              
      * @EXT\Route(
-     *     "/{vendor}/{bundle}/{domain}/{lang}/{key}/admin/lock", 
+     *     "/{translationItem}/admin/lock", 
      *     name="claroline_translator_admin_lock",
      *     options={"expose"=true}
      * )
      *
      * @return Response
      */
-    public function clickAdminLockAction($vendor, $bundle, $domain, $lang, $key)
+    public function clickAdminLockAction(TranslationItem $translationItem)
     {
         $this->checkIsAdmin();
 
         $this->container
             ->get('claroline.translation.manager.translation_manager')
-            ->clickAdminLock($vendor, $bundle, $domain, $lang, $key);
+            ->clickAdminLock($translationItem);
 
         return new JsonResponse();
     }
 
     /**              
      * @EXT\Route(
-     *     "/{vendor}/{bundle}/{domain}/{lang}/{key}/forum/subject", 
+     *     "/{translationItem}/forum/subject", 
      *     name="claroline_translator_forum_subject",
      *     options={"expose"=true}
      * )
      *
      * @return Response
      */
-    public function getForumSubjectAction($vendor, $bundle, $domain, $lang, $key)
+    public function getForumSubjectAction(TranslationItem $translationItem)
     {
-        $translator = $this->container->get('translator');
         $om = $this->container->get('claroline.persistence.object_manager');
         $forumManager = $this->container->get('claroline.manager.forum_manager');
 
-        $translations = $om->getRepository('ClarolineTranslatorBundle:TranslationItem')
-            ->findBy(array('vendor' => $vendor, 'bundle' => $bundle, 'lang' => $lang, 'key' => $key ));
-
-        foreach ($translations as $translation) {
-            if ($subject = $translation->getSubject()) {
-               return new JsonResponse(array('subject_id' => $subject->getId()));
-            }
+        if ($subject = $translationItem->getSubject()) {
+           return new JsonResponse(array('subject_id' => $subject->getId()));
         }
 
-        $el = array_pop($translations);
         $categoryId = $this->container->get('claroline.config.platform_config_handler')
             ->getParameter('translator_category_id');
 
@@ -277,24 +259,24 @@ class TranslatorController extends Controller
         $subject->setCreator($user);
         $subject->setAuthor($user->getFirstName() . ' ' . $user->getLastName());
 
-        $title = strtoupper($lang) . ': ' . $vendor . $bundle .  ' ' . $domain . $key;
-        $content = $translator->trans(
+        $title = strtoupper($translationItem->getLang()) . ': ' . $translationItem->getVendor() . $translationItem->getBundle() .  ' ' . $translationItem->getDomain() . $translationItem->getKey();
+     /*   $content = $translator->trans(
             'current_translation', 
             array('%translation%' => $el->getTranslation()), 
             'translator'
-        );
+        );*/
         $subject->setTitle($title);
         $subject->setCategory($category);
         $forumManager->createSubject($subject);
-        $message = new Message();
+        /*$message = new Message();
         $message->setContent($content);
         $message->setCreator($user);
         $message->setAuthor($user->getFirstName() . ' ' . $user->getLastName());
         $message->setSubject($subject);
-        $forumManager->createMessage($message, $subject);
+        $forumManager->createMessage($message, $subject);*/
 
-        $el->setSubject($subject);
-        $om->persist($el);
+        $translationItem->setSubject($subject);
+        $om->persist($translationItem);
         $om->flush();
 
         return new JsonResponse(array('subject_id' => $subject->getId()));

@@ -2,3 +2,7 @@ current_translation: Traduction actuelle: %translation%.
 translator: Traducteur
 category: Categorie
 allow_users_to_translate: Permettre aux utilisateurs de traduire
+identifier: Identifiant %id%
+translation_message: %translation% (créé par %author% le %date%)
+translation_history: Historique des traductions
+new_translation: Nouvelle traduction: %translation%.

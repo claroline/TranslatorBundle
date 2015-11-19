@@ -13,6 +13,7 @@ namespace Claroline\TranslatorBundle\Manager;
 
 use Claroline\BundleRecorder\Log\LoggableTrait;
 use Claroline\TranslatorBundle\Entity\TranslationItem;
+use Claroline\TranslatorBundle\Entity\Translation;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -25,7 +26,7 @@ class TranslationManager
 {
     use LoggableTrait;
 
-    const BATCH_SIZE = 500;
+    const BATCH_SIZE = 250;
 
     /**
      * @DI\InjectParams({
@@ -33,7 +34,8 @@ class TranslationManager
      *	   "om"            = @DI\Inject("claroline.persistence.object_manager"),
      *	   "gitConfig"     = @DI\Inject("%claroline.param.git_config%"),
      *     "tokenStorage"  = @DI\Inject("security.token_storage"),
-     *     "devTranslator" = @DI\Inject("claroline.dev_manager.translation_manager")
+     *     "devTranslator" = @DI\Inject("claroline.dev_manager.translation_manager"),
+     *     "authorization" = @DI\Inject("security.authorization_checker")
      * })
      */
     public function __construct(
@@ -41,7 +43,8 @@ class TranslationManager
         $om,
         $gitConfig,
         $tokenStorage,
-        $devTranslator
+        $devTranslator,
+        $authorization
     )
     {
         $this->gitDirectory  = $gitDirectory;
@@ -50,6 +53,7 @@ class TranslationManager
         $this->repository    = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
         $this->tokenStorage  = $tokenStorage;
         $this->devTranslator = $devTranslator;
+        $this->authorization = $authorization;
     }
 
     public function clear($vendor, $bundle)
@@ -65,13 +69,6 @@ class TranslationManager
     	}
 
     	$this->om->flush();
-        /* Not working properly
-    	$this->log('Removing commit from config file...');
-
-	    if ($configs = file_exists($this->gitConfig)) {
-	    	unset($configs[$vendor . $bundle]);
-	    	file_put_contents($this->gitConfig, Yaml::dump($configs, 2));
-	    }*/
     }
 
     public function init($vendor, $bundle)
@@ -88,54 +85,12 @@ class TranslationManager
         	$this->log("Couldn't add git config in " . $this->gitConfig . " !!!", LogLevel::DEBUG);
         }
 
-        $this->log('Setting up database...');
-        $domains = array();
-    		
-        foreach ($iterator as $fileInfo) {
-        	if ($fileInfo->isFile()) {
-                $parts = explode('.', $fileInfo->getBasename());
-        		$domain = $parts[0];
-        		$lang = $parts[1];
-                $domains[$domain][] = $lang;
-        	}
-        }
+        $this->setDatabaseFromYaml($vendor, $bundle);
+    }
 
-        //used for doctrine transaction
-        $_i = 0;
-
-        foreach ($domains as $domain => $langs) {
-
-            $translationMainPath = $this->getTranslationsDirectory($vendor . $bundle) . '/' . $domain . '.fr.yml';
-
-            foreach ($this->getAvailableLocales() as $lang) {
-               
-                $translationFilePath = $this->getTranslationsDirectory($vendor . $bundle) . '/' . $domain . '.' . $lang . '.yml';
-                $this->log('Initializing ' . $translationFilePath . '...');
-
-                if (file_exists($translationMainPath)) {
-                    $this->log('Initializing ' . $translationFilePath . '...', LogLevel::DEBUG);
-                    $this->devTranslator->fill(
-                        $translationMainPath, 
-                        $translationFilePath
-                    );
-                }
-
-                $translations = Yaml::parse($translationFilePath);
-
-                $this->recursiveParseTranslation(
-                    $translations, 
-                    $domain, 
-                    $lang, 
-                    $commit, 
-                    $vendor, 
-                    $bundle,
-                    '', 
-                    $_i
-                );
-            }
-        }
-
-        $this->om->flush();
+    public function pull($vendor, $bundle)
+    {
+        $this->setDatabaseFromYaml($vendor, $bundle);
     }
 
     /*
@@ -169,17 +124,20 @@ class TranslationManager
             $_i++;
             $item = new TranslationItem();
             $item->setKey($path . '[' . $key . ']');
-            $item->setTranslation($value);
             $item->setDomain($domain);
             $item->setLang($lang);
             $item->setCommit($commit);
             $item->setVendor($vendor);
             $item->setBundle($bundle);
-            $this->om->persist($item);      
+            $this->om->persist($item);
+            $this->addTranslation($item, $value);      
 
             if ($_i % self::BATCH_SIZE === 0) {
+                $this->log('[UOW]: ' . $this->om->getUnitOfWork()->size());
                 $this->log('Flushing ' . $_i . ' items...');
-                $this->om->flush();
+                $this->om->forceFlush();
+                $this->om->clear();
+                $this->log('[UOW]: ' . $this->om->getUnitOfWork()->size());
             }
         }
     }
@@ -202,25 +160,27 @@ class TranslationManager
 
     public function getLastTranslations($vendor, $bundle, $lang, $currentCommit = true, $page = 1)
     {
+        $showAll = $this->authorization->isGranted('ROLE_TRANSLATOR_ADMIN') ? true: false;
         $commit = $this->getCurrentCommit($vendor . $bundle);
 
         $translations = $this->repository
-            ->findLastTranslations($vendor, $bundle, $commit, $lang);
+            ->findLastTranslations($vendor, $bundle, $commit, $lang, $showAll);
 
         return $this->getLatestFromArray($translations);
     }
 
     public function searchLastTranslations($vendor, $bundle, $lang, $search, $currentCommit = true, $page = 1)
     {
+        $showAll = $this->authorization->isGranted('ROLE_TRANSLATOR_ADMIN') ? true: false;
         $commit = $this->getCurrentCommit($vendor . $bundle);
 
         $translations = $this->repository
-            ->searchLastTranslations($vendor, $bundle, $commit, $lang, $search);
+            ->searchLastTranslations($vendor, $bundle, $commit, $lang, $search, $showAll);
 
         return $this->getLatestFromArray($translations);
     }
 
-    public function getTranslationInfo($vendor, $bundle, $domain, $lang, $key)
+    public function getTranslationItem($vendor, $bundle, $domain, $lang, $key)
     {
         $translations = $this->repository->findBy(array(
             'vendor' => $vendor, 
@@ -233,23 +193,28 @@ class TranslationManager
         return $translations;
     }
 
-    public function addTranslation($vendor, $bundle, $domain, $lang, $key, $value)
+    public function addTranslation(TranslationItem $translationItem, $value)
     {
-        $creator = $this->tokenStorage->getToken()->getUser() !== 'anon.' ? 
-            $this->tokenStorage->getToken()->getUser(): null;
-        $item = new TranslationItem();
-        $item->setVendor($vendor);
-        $item->setBundle($bundle);
-        $item->setLang($lang);
-        $item->setKey($key);
-        $item->setTranslation($value);
-        $item->setDomain($domain);
-        $item->setCommit($this->getCurrentCommit($vendor . $bundle));
-        $item->setCreator($creator);
-        $this->om->persist($item);
+        if ($this->tokenStorage->getToken()) {
+            $creator = $this->tokenStorage->getToken()->getUser() !== 'anon.' ? 
+                $this->tokenStorage->getToken()->getUser(): null;
+        } else {
+            $creator = null;
+        }
+
+        $translation = new Translation();
+        $translation->setCreator($creator);
+        $translation->setTranslation($value);
+        $translation->setTranslationItem($translationItem);
+        $this->om->persist($translation);
         $this->om->flush();
 
-        return $item;
+        return $translationItem;
+    }
+
+    public function find($translationItemId)
+    {
+        return $this->repository->find($translationItemId);
     }
 
     /*
@@ -260,27 +225,17 @@ class TranslationManager
         return array('fr', 'en', 'nl', 'de', 'es');
     }
 
-    public function clickUserLock($vendor, $bundle, $domain, $lang, $key)
+    public function clickUserLock(TranslationItem $translationItem)
     {
-        $translations = $this->getTranslationInfo($vendor, $bundle, $domain, $lang, $key);
-
-        foreach ($translations as $translation) {
-            $translation->changeUserLock();
-            $this->om->persist($translation);
-        }
-
+        $translationItem->changeUserLock();
+        $this->om->persist($translationItem);
         $this->om->flush();
     }
 
-    public function clickAdminLock($vendor, $bundle, $domain, $lang, $key)
+    public function clickAdminLock(TranslationItem $translationItem)
     {
-        $translations = $this->getTranslationInfo($vendor, $bundle, $domain, $lang, $key);
-
-        foreach ($translations as $translation) {
-            $translation->changeAdminLock();
-            $this->om->persist($translation);
-        }
-
+        $translationItem->changeAdminLock();
+        $this->om->persist($translationItem);
         $this->om->flush();
     }
 
@@ -294,5 +249,61 @@ class TranslationManager
         }
 
         return array_values($last);       
+    }
+
+    private function setDatabaseFromYaml($vendor, $bundle)
+    {
+        $iterator = new \DirectoryIterator($this->getTranslationsDirectory($vendor . $bundle));
+        $commit = $this->getCurrentCommit($vendor . $bundle);
+
+        $this->log('Setting up database...');
+        $domains = array();
+            
+        foreach ($iterator as $fileInfo) {
+            if ($fileInfo->isFile()) {
+                $parts = explode('.', $fileInfo->getBasename());
+                $domain = $parts[0];
+                $lang = $parts[1];
+                $domains[$domain][] = $lang;
+            }
+        }
+
+        //used for doctrine transaction
+        $_i = 0;
+        $this->om->startFlushSuite();
+
+        foreach ($domains as $domain => $langs) {
+
+            $translationMainPath = $this->getTranslationsDirectory($vendor . $bundle) . '/' . $domain . '.fr.yml';
+
+            foreach ($this->getAvailableLocales() as $lang) {
+               
+                $translationFilePath = $this->getTranslationsDirectory($vendor . $bundle) . '/' . $domain . '.' . $lang . '.yml';
+                $this->log('Initializing ' . $translationFilePath . '...');
+
+                if (file_exists($translationMainPath)) {
+                    $this->log('Initializing ' . $translationFilePath . '...', LogLevel::DEBUG);
+                    $this->devTranslator->fill(
+                        $translationMainPath, 
+                        $translationFilePath
+                    );
+                }
+
+                $translations = Yaml::parse($translationFilePath);
+
+                $this->recursiveParseTranslation(
+                    $translations, 
+                    $domain, 
+                    $lang, 
+                    $commit, 
+                    $vendor, 
+                    $bundle,
+                    '', 
+                    $_i
+                );
+            }
+        }
+
+        $this->om->endFlushSuite();
     }
 }

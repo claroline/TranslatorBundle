@@ -35,9 +35,10 @@ class LoadRolesData extends AbstractFixture implements ContainerAwareInterface
      */
     public function load(ObjectManager $manager)
     {
+        $repo = $manager->getRepository('ClarolineCoreBundle:Role');
         $roleManager = $this->container->get('claroline.manager.role_manager');
-        $roleManager->createBaseRole('ROLE_TRANSLATOR', 'translator');
-        $roleManager->createBaseRole('ROLE_TRANSLATOR_ADMIN', 'role_translator_admin');
+        if (!$repo->findByName('ROLE_TRANSLATOR')) $roleManager->createBaseRole('ROLE_TRANSLATOR', 'translator');
+        if (!$repo->findByName('ROLE_TRANSLATOR_ADMIN')) $roleManager->createBaseRole('ROLE_TRANSLATOR_ADMIN', 'role_translator_admin');
     }
 
     public function getOrder()

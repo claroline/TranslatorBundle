@@ -40,13 +40,6 @@ class TranslationItem
     protected $key;
 
     /**
-     * @ORM\Column(name="translation_value", type="text")
-     * @Groups({"translator", "infos"})     
-     * @SerializedName("translation")
-     */
-    protected $translation;
-
-    /**
      * @ORM\Column(name="domain", type="text")
      * @Groups({"translator"})
      * @SerializedName("domain")
@@ -68,14 +61,6 @@ class TranslationItem
     protected $lang;
 
     /**
-     * @ORM\Column(name="creation_date", type="datetime")
-     * @Gedmo\Timestampable(on="create")
-     * @Groups({"translator", "infos"})
-     * @SerializedName("creationDate")
-     */
-    protected $creationDate;
-
-    /**
      * @ORM\Column(name="vendor", type="text")
      * @Groups({"translator"})
      * @SerializedName("vendor")
@@ -88,22 +73,6 @@ class TranslationItem
      * @SerializedName("bundle")
      */
     protected $bundle;
-
-    /**
-     * @ORM\ManyToOne(
-     *     targetEntity="Claroline\CoreBundle\Entity\User",
-     *     cascade={"persist"}
-     * )
-     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
-     */
-    protected $creator;
-
-    /**  
-     * @SerializedName("author")
-     * @Accessor(getter="getAuthor")
-     * @Groups({"infos"})
-     */
-    protected $author;
 
     /**
      * @ORM\Column(name="user_lock", type="boolean")
@@ -135,6 +104,17 @@ class TranslationItem
      */
     protected $subject;
 
+    /**
+     * @ORM\OneToMany(
+     *     targetEntity="Claroline\TranslatorBundle\Entity\Translation",
+     *     mappedBy="translationItem",
+     *     cascade={"persist"}
+     * )
+     * @Groups({"translator", "infos"})
+     * @ORM\OrderBy({"id" = "DESC"})
+     */
+    protected $translations;
+
     public function getId()
     {
         return $this->id;
@@ -150,14 +130,9 @@ class TranslationItem
         return $this->key;
     }
 
-    public function setTranslation($translation)
+    public function getTranslations()
     {
-        $this->translation = $translation;
-    }
-
-    public function getTranslation()
-    {
-        return $this->translation;
+        return $this->translations;
     }
 
     public function setCommit($commit)
@@ -190,16 +165,6 @@ class TranslationItem
         return $this->lang;
     }
 
-    public function setCreationDate(\DateTime $creationDate)
-    {
-        $this->creationDate = $creationDate;
-    }
-
-    public function getCreationDate()
-    {
-        return $this->creationDate;
-    }
-
     public function setBundle($bundle)
     {
         $this->bundle = $bundle;
@@ -218,21 +183,6 @@ class TranslationItem
     public function getVendor()
     {
         return $this->vendor;
-    }
-
-    public function setCreator($creator)
-    {
-        $this->creator = $creator;
-    }
-
-    public function getCreator()
-    {
-        return $this->creator;
-    }
-
-    public function getAuthor()
-    {
-        return $this->creator ? $this->creator->getUsername(): 'claroline';
     }
 
     public function setIsAdminLocked($boolean)

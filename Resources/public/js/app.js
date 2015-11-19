@@ -1,4 +1,4 @@
-var gitTranslator = angular.module('gitTranslator', ['data-table', 'ui.bootstrap']);
+var gitTranslator = angular.module('gitTranslator', ['data-table', 'ui.bootstrap', 'ui.translation']);
 
 //let's do some initialization first.
 gitTranslator.config(function ($httpProvider) {
@@ -33,6 +33,7 @@ gitTranslator.controller('contentCtrl', function(
 	$log,
 	$http, 
 	$cacheFactory, 
+	$sce,
 	API
 ) {
 	$http.defaults.cache        = true;
@@ -62,12 +63,6 @@ gitTranslator.controller('contentCtrl', function(
  			prop: "translation"
  		}]
  	}
-
- 	$scope.infoPopover = {
- 		content: 'Hello world',
- 		templateUrl: AngularApp.webDir + 'bundles/clarolinetranslator/js/views/infos.html',
- 		title:'Title'
- 	};
 
 	API.repositories().then(function(d) {
 		$scope.repositories = d.data;
@@ -210,12 +205,8 @@ gitTranslator.controller('contentCtrl', function(
 
 	$scope.addTranslation = function(cell, row, col) {
 		var data = {
-			'key': row.key, 
-			'bundle': row.bundle, 
-			'vendor': row.vendor, 
-			'domain': row.domain,
-			'translation': row.translation,
-			'lang': $scope.lang
+			'translation_item': row.id, 
+			'translation': row.translations[0].translation
 		};
 
 		cacheRow(row);
@@ -224,6 +215,16 @@ gitTranslator.controller('contentCtrl', function(
 			Routing.generate('claroline_translator_add_translation'),
 			data
 		);
+
+	 	var alertSuccess = '<div class="alert alert-success">' + 
+	 		'<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
+		 	 window.Translator.trans('new_translation', {translation: row.translations[0].translation}, 'translator')
+		'</div>';
+
+		promise.then(function(d) {
+			var myEl = angular.element(document.querySelector('#translator-panel'));
+			myEl.prepend(alertSuccess);  
+		});
 	}
 
 	$scope.loadInfos = function(row) {
@@ -233,14 +234,14 @@ gitTranslator.controller('contentCtrl', function(
 	}
 
 	$scope.clickAdminLock = function(row) {
-		API.clickAdminLock($scope.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
+		API.clickAdminLock(row.id).then(function(d) {
 			row.admin_lock = !row.admin_lock;
 			cacheRow(row);
 		});
 	}
 
 	$scope.clickUserLock = function(row) {
-		API.clickUserLock(row.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
+		API.clickUserLock(row.id).then(function(d) {
 			row.user_lock = !row.user_lock;
 			cacheRow(row);
 		});
@@ -255,7 +256,7 @@ gitTranslator.controller('contentCtrl', function(
 		var idx = $scope.translations.indexOf(row);
 
 		return (typeof $scope.preferedTranslations[idx] !== 'undefined') ?
-			$scope.preferedTranslations[idx].translation:
+			$scope.preferedTranslations[idx].translations[0].translation:
 			'not found';
 	}
 
@@ -265,7 +266,7 @@ gitTranslator.controller('contentCtrl', function(
 	}
 
 	$scope.comment = function(row) {
-		API.comment($scope.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
+		API.comment(row.id).then(function(d) {
 			var route = Routing.generate('claro_forum_messages', {'subject': d.data.subject_id});
 			window.location.href = route;
 		});
@@ -304,24 +305,24 @@ gitTranslator.factory('API', function($http) {
 		));
 	}
 
-	api.clickUserLock = function(lang, vendor, bundle, domain, key) {
+	api.clickUserLock = function(id) {
 		return $http.post(Routing.generate(
 			'claroline_translator_user_lock', 
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key, 'domain': domain}
+			{'translationItem': id}
 		));
 	}
 
-	api.clickAdminLock = function(lang, vendor, bundle, domain, key) {
+	api.clickAdminLock = function(id) {
 		return $http.post(Routing.generate(
 			'claroline_translator_admin_lock', 
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key, 'domain': domain}
+			{'translationItem': id}
 		));
 	}
 
-	api.comment = function(lang, vendor, bundle, domain, key) {
+	api.comment = function(id) {
 		return $http.get(Routing.generate(
 			'claroline_translator_forum_subject',
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key, 'domain': domain}
+			{'translationItem': id}
 		));
 	}
 

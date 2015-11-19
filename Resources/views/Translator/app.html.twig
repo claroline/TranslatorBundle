@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class="panel panel-default" ng-app="gitTranslator">
+    <div id="translator-panel" class="panel panel-default" ng-app="gitTranslator">
         <div class="panel-body" ng-controller="contentCtrl">
             <div class="col-md-2">
                 <div class="panel-body">
@@ -60,6 +60,7 @@
 
 {% block javascripts %}
     {{ parent() }}
+    <script type="text/javascript" src="{{ url('bazinga_jstranslation_js', {domain: 'translator'}) }}"></script>
 
     {# Angular JS #}
     {% javascripts debug=false filter='jsmin' output='vendor/claroline/js/angular.js'

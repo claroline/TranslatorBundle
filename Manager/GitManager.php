@@ -55,12 +55,13 @@ class GitManager
 
     public function pull($vendor, $bundle)
     {
-        $this->log('Pulling ' . $vendor . ' ' . $bundle . '...');
-    }
+        $workingDir = $this->gitDirectory . $vendor . $bundle;
+        chdir($workingDir);
+        $command = 'git pull origin master';
+        $this->log($command);
+        exec($command);
 
-    public function build($vendor, $bundle)
-    {
-        $this->log('Building ' . $vendor . ' ' . $bundle . '...');
+        $this->translationManager->pull($vendor, $bundle);
     }
 
     public function commit($vendor, $bundle) {
@@ -197,7 +198,9 @@ class GitManager
         $data = [];
 
         foreach ($items as $item) {
-            $data[$item->getDomain()][$item->getLang()][$item->getKey()] = $item->getTranslation(); 
+            $translations = $item->getTranslations();
+            //get the last translation
+            $data[$item->getDomain()][$item->getLang()][$item->getKey()] = $translations[0]->getTranslation(); 
         }
 
         return $data;

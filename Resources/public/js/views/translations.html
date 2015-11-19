@@ -31,9 +31,9 @@
 			<div class="col-md-9">
 				<input 
 					type="text" 
-					value="{{ $row.translation }}"
+					value="{{ $row.translations[0].translation }}"
 					class="form-control"
-					ng-model=$row.translation
+					ng-model=$row.translations[0].translation
 					ng-model-options="{ debounce: 1000 }"
 				>
 				</input>
@@ -63,10 +63,12 @@
 			{{ getPreferedTranslation($cell, $row, $column) }}
 		</div>
 		<div class="collapse" style="clear: left;" id="info{{ $row.id }}">
-			Historique des traductions:
-				<ul> 
-					<li ng-repeat="translationInfo in translationInfos[$row.id]">
-						{{ ::translationInfo.translation }} (créé par {{ ::translationInfo.author }} le {{ ::translationInfo.creationDate }})
+			{{ 'identifier'|trans:{id: $row.domain + $row.key}:'translator' }}
+			</br>
+			{{ 'translation_history'|trans:{}:'translator' }}
+				<ul ng-repeat="translationInfo in translationInfos[$row.id]"> 
+					<li ng-repeat="translation in translationInfo.translations">
+						{{ 'translation_message'|trans:{translation: translation.translation, author: translation.author, date: translation.creation_date}:'translator' }}
 					</li>
 				</ul>
 		</div>
