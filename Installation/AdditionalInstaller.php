@@ -10,6 +10,7 @@ class AdditionalInstaller extends BaseInstaller
 
     public function preUpdate($currentVersion, $targetVersion)
     {
+    	
     }
 
     public function postUpdate($currentVersion, $targetVersion)

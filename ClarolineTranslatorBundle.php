@@ -18,15 +18,14 @@ class ClarolineTranslatorBundle extends PluginBundle
         return $config->addRoutingResource(__DIR__ . '/Resources/config/routing.yml', null, 'translator');
     }
 
-    /*
-    public function getAdditionalInstaller()
-    {
-        return new AdditionalInstaller();
-    }
-    */
-
     public function hasMigrations()
     {
         return true;
     }
+
+    public function getRequiredFixturesDirectory($environment)
+    {
+        return $environment !== 'test' ? 'DataFixtures' : null;
+    }
+
 }

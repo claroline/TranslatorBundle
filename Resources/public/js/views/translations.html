@@ -47,17 +47,15 @@
 				</button>
 				<button
 					class="btn btn-default"
-					ng-click="startComment($row)"
+					ng-click="comment($row)"
 				>
 					<i class="fa fa-comment"></i>
 				</button>
 				<button class="btn btn-default" ng-click="clickUserLock($row)">
-					<i ng-if="!$row.user_lock" class="fa fa-check"></i>
-					<i ng-if="$row.user_lock" class="fa fa-close"></i>
+					<i ng-class="{'fa fa-check': !$row.user_lock, 'fa fa-close':$row.user_lock}"></i>
 				</button>
 				<button class="btn btn-default" ng-click="clickAdminLock($row)">
-					<i ng-if="!$row.admin_lock" class="fa fa-unlock"></i>
-					<i ng-if="$row.admin_lock" class="fa fa-lock"></i>
+					<i ng-class="{'fa fa-unlock': !$row.admin_lock,'fa fa-lock':$row.admin_lock}"></i>
 				</button>
 			</div>
 		</div>

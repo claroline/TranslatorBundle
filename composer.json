@@ -7,6 +7,7 @@
     "require": {
         "php": ">=5.4.1",
         "claroline/core-bundle": "~5.0",
+        "claroline/forum-bundle": "~5.0",
         "claroline/dev-bundle": "*"
     },
     "autoload": {

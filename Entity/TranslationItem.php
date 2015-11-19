@@ -126,6 +126,15 @@ class TranslationItem
      */
     protected $idx;
 
+    /**
+     * @ORM\ManyToOne(
+     *      targetEntity="Claroline\ForumBundle\Entity\Subject",
+     *      cascade={"persist"}
+     * )
+     * @ORM\JoinColumn(onDelete="CASCADE", nullable=true)
+     */
+    protected $subject;
+
     public function getId()
     {
         return $this->id;
@@ -254,6 +263,16 @@ class TranslationItem
     public function changeAdminLock()
     {
         $this->isAdminLocked = !$this->isAdminLocked;
+    }
+
+    public function setSubject($subject) 
+    {
+        $this->subject = $subject;
+    }
+
+    public function getSubject()
+    {
+        return $this->subject;
     }
 
     public function getIndex()

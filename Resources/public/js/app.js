@@ -227,20 +227,20 @@ gitTranslator.controller('contentCtrl', function(
 	}
 
 	$scope.loadInfos = function(row) {
-		API.translationsInfo($scope.lang, row.vendor, row.bundle, row.key).then(function(d) {
+		API.translationsInfo($scope.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
 			$scope.translationInfos[row.id] = d.data;
 		});
 	}
 
 	$scope.clickAdminLock = function(row) {
-		API.clickAdminLock($scope.lang, row.vendor, row.bundle, row.key).then(function(d) {
+		API.clickAdminLock($scope.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
 			row.admin_lock = !row.admin_lock;
 			cacheRow(row);
 		});
 	}
 
 	$scope.clickUserLock = function(row) {
-		API.clickUserLock(row.lang, row.vendor, row.bundle, row.key).then(function(d) {
+		API.clickUserLock(row.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
 			row.user_lock = !row.user_lock;
 			cacheRow(row);
 		});
@@ -264,8 +264,11 @@ gitTranslator.controller('contentCtrl', function(
 		loadTranslations('prefered');
 	}
 
-	$scope.startComment = function(row) {
-		API.startComment($scope.lang, row.vendor, row.bundle, row.key);
+	$scope.comment = function(row) {
+		API.comment($scope.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
+			var route = Routing.generate('claro_forum_messages', {'subject': d.data.subject_id});
+			window.location.href = route;
+		});
 	}
 });
 
@@ -294,29 +297,32 @@ gitTranslator.factory('API', function($http) {
 		return $http.get(Routing.generate('claroline_translator_repositories'));
 	}
 
-	api.translationsInfo = function(lang, vendor, bundle, key) {
+	api.translationsInfo = function(lang, vendor, bundle, domain, key) {
 		return $http.get(Routing.generate(
 			'claroline_translator_get_translation_info', 
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
+			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key, 'domain': domain}
 		));
 	}
 
-	api.clickUserLock = function(lang, vendor, bundle, key) {
+	api.clickUserLock = function(lang, vendor, bundle, domain, key) {
 		return $http.post(Routing.generate(
 			'claroline_translator_user_lock', 
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
+			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key, 'domain': domain}
 		));
 	}
 
-	api.clickAdminLock = function(lang, vendor, bundle, key) {
+	api.clickAdminLock = function(lang, vendor, bundle, domain, key) {
 		return $http.post(Routing.generate(
 			'claroline_translator_admin_lock', 
-			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key}
+			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key, 'domain': domain}
 		));
 	}
 
-	api.startComment = function(lang, vendor, bundle, key) {
-		console.log('do something');
+	api.comment = function(lang, vendor, bundle, domain, key) {
+		return $http.get(Routing.generate(
+			'claroline_translator_forum_subject',
+			{'vendor': vendor, 'bundle': bundle, 'lang': lang, 'key': key, 'domain': domain}
+		));
 	}
 
 	return api;

@@ -220,13 +220,14 @@ class TranslationManager
         return $this->getLatestFromArray($translations);
     }
 
-    public function getTranslationInfo($vendor, $bundle, $lang, $key)
+    public function getTranslationInfo($vendor, $bundle, $domain, $lang, $key)
     {
         $translations = $this->repository->findBy(array(
             'vendor' => $vendor, 
             'bundle' => $bundle, 
             'lang'   => $lang, 
-            'key'    => $key
+            'key'    => $key,
+            'domain' => $domain
         ), array('id' => 'DESC'));
 
         return $translations;
@@ -259,9 +260,9 @@ class TranslationManager
         return array('fr', 'en', 'nl', 'de', 'es');
     }
 
-    public function clickUserLock($vendor, $bundle, $lang, $key)
+    public function clickUserLock($vendor, $bundle, $domain, $lang, $key)
     {
-        $translations = $this->getTranslationInfo($vendor, $bundle, $lang, $key);
+        $translations = $this->getTranslationInfo($vendor, $bundle, $domain, $lang, $key);
 
         foreach ($translations as $translation) {
             $translation->changeUserLock();
@@ -271,9 +272,9 @@ class TranslationManager
         $this->om->flush();
     }
 
-    public function clickAdminLock($vendor, $bundle, $lang, $key)
+    public function clickAdminLock($vendor, $bundle, $domain, $lang, $key)
     {
-        $translations = $this->getTranslationInfo($vendor, $bundle, $lang, $key);
+        $translations = $this->getTranslationInfo($vendor, $bundle, $domain, $lang, $key);
 
         foreach ($translations as $translation) {
             $translation->changeAdminLock();
