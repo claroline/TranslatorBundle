@@ -297,8 +297,10 @@ class TranslatorController extends Controller
             ->getParameter('translator_category_id');
         $allowUsers = $this->get('claroline.config.platform_config_handler')
             ->getParameter('translator_allow_users');
+        $username = $this->get('claroline.config.platform_config_handler')
+            ->getParameter('translator_git_username');
 
-        $form = $this->get('form.factory')->create(new TranslatorType($category, $allowUsers));
+        $form = $this->get('form.factory')->create(new TranslatorType($category, $allowUsers, $username));
 
         return array('form' => $form->createView());
     }
@@ -319,6 +321,7 @@ class TranslatorController extends Controller
         if ($form->isValid()) {
             $this->get('claroline.config.platform_config_handler')->setParameter('translator_category_id', $form->get('category')->getData());
             $this->get('claroline.config.platform_config_handler')->setParameter('translator_allow_users', $form->get('allowUsers')->getData());
+            $this->get('claroline.config.platform_config_handler')->setParameter('translator_git_username', $form->get('git_username')->getData());
 
             return $this->redirect($this->generateUrl('claro_admin_plugins'));
         }

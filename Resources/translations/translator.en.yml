@@ -6,3 +6,4 @@ identifier: Identifier %id%
 translation_message: %translation% (by %author% the %date%)
 translation_history: Translation history
 new_translation: New translation: %translation%
+compare_with: Compare with:

@@ -163,10 +163,8 @@ class TranslationManager
         $showAll = $this->authorization->isGranted('ROLE_TRANSLATOR_ADMIN') ? true: false;
         $commit = $this->getCurrentCommit($vendor . $bundle);
 
-        $translations = $this->repository
+        return $this->repository
             ->findLastTranslations($vendor, $bundle, $commit, $lang, $showAll);
-
-        return $this->getLatestFromArray($translations);
     }
 
     public function searchLastTranslations($vendor, $bundle, $lang, $search, $currentCommit = true, $page = 1)

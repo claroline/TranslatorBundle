@@ -16,7 +16,7 @@
 {% block content %}
     <div id="translator-panel" class="panel panel-default" ng-app="gitTranslator">
         <div class="panel-body" ng-controller="contentCtrl">
-            <div class="col-md-2">
+            <div class="col-md-2 panel-group">
                 <div class="panel-body">
                     <locales align="center" class="locale-list">
                     </locales>
@@ -26,13 +26,9 @@
                     </repositories>
                 </div>
             </div>
-            <div class="col-md-10">
+            <div class="col-md-10 panel-group">
                 <div class="container panel-body">
-                    <div class="col-md-3" align="center">
-                        <preferedlang class="locale-list">
-                        </preferedlang>
-                    </div>
-                    <div class="col-md-9" align="center">
+                    <div align="center">
                         <searchbar>
                         </searchbar>   
                     </div>
@@ -40,6 +36,10 @@
                 <div class="panel-body">
                     <translations>
                     </translations>
+                </div>
+                <div class="panel-body">
+                    <preferedlang class="locale-list">
+                    </preferedlang>
                 </div>
             </div>
         </div>

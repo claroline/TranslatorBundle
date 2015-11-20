@@ -32,7 +32,8 @@ class GitManager
      *     "gitConfig"          = @DI\Inject("%claroline.param.git_config%"),
      *     "repositories"       = @DI\Inject("%claroline.param.git_repositories%"),
      *     "om"                 = @DI\Inject("claroline.persistence.object_manager"),
-     *     "devTranslator"      = @DI\Inject("claroline.dev_manager.translation_manager")
+     *     "devTranslator"      = @DI\Inject("claroline.dev_manager.translation_manager"),
+     *     "ch"                 = @DI\Inject("claroline.config.platform_config_handler")
      * })
      */
     public function __construct(
@@ -41,7 +42,8 @@ class GitManager
         $gitConfig,
         $repositories,
         $om,
-        $devTranslator
+        $devTranslator,
+        $ch
     )
     {
         $this->gitDirectory       = $gitDirectory;
@@ -51,15 +53,15 @@ class GitManager
         $this->om                 = $om;
         $this->repo               = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
         $this->devTranslator      = $devTranslator;
+        $this->ch                 = $ch;
     }
 
     public function pull($vendor, $bundle)
     {
         $workingDir = $this->gitDirectory . $vendor . $bundle;
         chdir($workingDir);
-        $command = 'git pull origin master';
         $this->log($command);
-        exec($command);
+        exec('git pull origin master');
 
         $this->translationManager->pull($vendor, $bundle);
     }
@@ -73,10 +75,21 @@ class GitManager
             )
         );
 
+        $commit = $this->translationManager->getCurrentCommit($vendor . $bundle);
         $this->log('Commiting ' . count($items) . ' translations...');
         $data = $this->serializeForCommit($items);
         $this->buildFilesToCommit($data, $vendor, $bundle);
-        $this->log('Please commit and push manually.');
+        $workingDir = $this->gitDirectory . $vendor . $bundle;
+        $branch = 'translations-' . $commit;
+        chdir($workingDir);
+        $this->log('git checkout ' . $branch);
+        exec('git checkout ' . $branch);
+        $this->log('git add .');        
+        exec('git add .');
+        $this->log('git commit -m "translations from claroline.net"');
+        exec('git commit -m "translations from claroline.net"');
+        $this->log('git push origin ' . $branch);
+        exec('git push origin ' . $branch);
     }
 
     public function init($vendor, $bundle)
@@ -108,6 +121,14 @@ class GitManager
         $this->log('git pull --depth=1 origin master');
         exec('git pull --depth=1 origin master');
         $this->log('Git was set up for ' . $vendor . $bundle . '.');
+        $commit = $this->translationManager->getCurrentCommit($vendor . $bundle);
+        $this->log('git checkout -b translations-' . $commit);
+        exec('git checkout -b translations-' . $commit);
+        $cmd = 'git remote set-url origin https://github.com/' .
+            $this->ch->getParameter('translator_git_username') .
+            '/' . $bundle . '.git --push';
+        $this->log($cmd);
+        exec($cmd);
 
         //set the translations for each supported languages
         $this->translationManager->init($vendor, $bundle);

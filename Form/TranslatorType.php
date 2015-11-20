@@ -16,10 +16,11 @@ use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
 class TranslatorType extends AbstractType
 {
-    public function __construct($categoryId = null, $allowUsers = false)
+    public function __construct($categoryId = null, $allowUsers = false, $username = false)
     {
         $this->categoryId = $categoryId;
         $this->allowUsers = $allowUsers;
+        $this->username   = $username;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -39,6 +40,15 @@ class TranslatorType extends AbstractType
                 'label' => 'allow_users_to_translate',
                 'required' => false,
                 'data' => $this->allowUsers
+            )
+        );
+        $builder->add(
+            'git_username',
+            'text',
+            array(
+                'label' => 'github login',
+                'required' => false,
+                'data' => $this->username
             )
         );
     }
