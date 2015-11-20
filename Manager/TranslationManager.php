@@ -177,7 +177,7 @@ class TranslationManager
         $translations = $this->repository
             ->searchLastTranslations($vendor, $bundle, $commit, $lang, $search, $showAll);
 
-        return $this->getLatestFromArray($translations);
+        return $this->getLatestFromSearch($translations);
     }
 
     public function getTranslationItem($vendor, $bundle, $domain, $lang, $key)
@@ -237,6 +237,17 @@ class TranslationManager
         $translationItem->changeAdminLock();
         $this->om->persist($translationItem);
         $this->om->flush();
+    }
+
+    private function getLatestFromSearch(array $translations)
+    {
+        $data = array();
+
+        foreach ($translations as $translation) {
+            $data[] = $translation->getTranslationItem();
+        }
+
+        return $data;
     }
 
     private function getLatestFromArray(array $translations)
