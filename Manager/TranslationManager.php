@@ -116,7 +116,7 @@ class TranslationManager
                     $commit, 
                     $vendor, 
                     $bundle,
-                    $path . '' . $key . ']', 
+                    $path . '[' . $key . ']', 
                     $_i
                 );
             }

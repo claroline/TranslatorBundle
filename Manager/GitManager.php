@@ -225,6 +225,7 @@ class GitManager
             $value;
 
         return $el;
+
     }
 
     /*
