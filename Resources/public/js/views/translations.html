@@ -54,7 +54,7 @@
 				<button class="btn btn-default" ng-click="clickUserLock($row)">
 					<i ng-class="{'fa fa-check': !$row.user_lock, 'fa fa-close':$row.user_lock}"></i>
 				</button>
-				<button class="btn btn-default" ng-click="clickAdminLock($row)">
+				<button ng-if="isAdmin" class="btn btn-default" ng-click="clickAdminLock($row)">
 					<i ng-class="{'fa fa-unlock': !$row.admin_lock,'fa fa-lock':$row.admin_lock}"></i>
 				</button>
 			</div>

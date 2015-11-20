@@ -1,8 +1,9 @@
 <button 
-	data-ng-repeat="lang in langs" 
-	class="label label-default" 
-	data-lang="{{ lang }}"
-	ng-click="setLang(lang)"
+	data-ng-repeat="available in langs" 
+	class="label label-default btn btn-default"
+	data-lang="{{ available }}"
+	ng-click="setLang(available)"
+	ng-class="{'active': lang == available}"
 >
-    {{ lang }}
+    {{ available }}
 </button>

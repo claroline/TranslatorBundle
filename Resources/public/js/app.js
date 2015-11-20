@@ -48,6 +48,7 @@ gitTranslator.controller('contentCtrl', function(
 	$scope.preferedTranslations = [];
 	$scope.search               = '';
 	$scope.translationInfos     = [];
+	$scope.isAdmin              = AngularApp.isAdmin;
 
  	$scope.dataTableOptions = {
  		scrollbarV: false,

@@ -27,6 +27,7 @@ class TranslationItemRepository extends EntityRepository
 		';
 
 		if (!$showAll) $dql .= 'AND i.isAdminLocked = :adminLocked';
+		$dql .= ' ORDER BY i.key';
 
         $query = $this->_em->createQuery($dql);
         $query->setParameter('vendor', $vendor);
@@ -59,6 +60,7 @@ class TranslationItemRepository extends EntityRepository
 		';
 
 		if (!$showAll) $dql .= 'AND i.isAdminLocked = :adminLocked';
+		$dql .= ' ORDER BY i.key';
 
         $query = $this->_em->createQuery($dql);
         $query->setParameter('vendor', $vendor);

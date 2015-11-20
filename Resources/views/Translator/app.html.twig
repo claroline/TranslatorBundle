@@ -91,9 +91,13 @@
     {# Set some vars needed by Angular parts #}
     <script type="text/javascript">
         {# Make Twig variables accessibles by AngularJS #}
+        {% set isAdmin = is_granted('ROLE_TRANSLATOR_ADMIN') %}
+        {% if not isAdmin %} {% set isAdmin = 0 %} {% endif %}
+
         var AngularApp = {};
         AngularApp.webDir        = "{{ asset('') }}";
         AngularApp.locale        = "{{ app.request.locale ~ '_' ~ app.request.locale|upper }}";
+        AngularApp.isAdmin       = {{ isAdmin }};
     </script>
 
     <script type="text/javascript" src={{ asset('bundles/clarolinetranslator/js/app.js') }}></script>
