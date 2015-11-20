@@ -97,7 +97,7 @@ class TranslationManager
      *
      */
     private function recursiveParseTranslation(
-        $translations,
+        array $translations,
         $domain,
         $lang, 
         $commit,
@@ -299,6 +299,7 @@ class TranslationManager
                 }
 
                 $translations = Yaml::parse($translationFilePath);
+                if (!is_array($translations)) $translations = array();
 
                 $this->recursiveParseTranslation(
                     $translations, 
