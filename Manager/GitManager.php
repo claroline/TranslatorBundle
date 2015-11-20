@@ -199,10 +199,9 @@ class GitManager
 
         foreach ($items as $item) {
             $translations = $item->getTranslations();
-            //get the last translation
             $data[$item->getDomain()][$item->getLang()][$item->getKey()] = $translations[0]->getTranslation(); 
         }
-
+        
         return $data;
     }
 
