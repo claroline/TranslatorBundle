@@ -119,18 +119,18 @@ class TranslationManager
                     $path . '[' . $key . ']', 
                     $_i
                 );
-            }
-
-            $_i++;
-            $item = new TranslationItem();
-            $item->setKey($path . '[' . $key . ']');
-            $item->setDomain($domain);
-            $item->setLang($lang);
-            $item->setCommit($commit);
-            $item->setVendor($vendor);
-            $item->setBundle($bundle);
-            $this->om->persist($item);
-            $this->addTranslation($item, $value);      
+            } else {
+                $_i++;
+                $item = new TranslationItem();
+                $item->setKey($path . '[' . $key . ']');
+                $item->setDomain($domain);
+                $item->setLang($lang);
+                $item->setCommit($commit);
+                $item->setVendor($vendor);
+                $item->setBundle($bundle);
+                $this->om->persist($item);
+                $this->addTranslation($item, $value);   
+            }   
 
             if ($_i % self::BATCH_SIZE === 0) {
                 $this->log('[UOW]: ' . $this->om->getUnitOfWork()->size());
