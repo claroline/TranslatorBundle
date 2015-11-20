@@ -39,7 +39,7 @@
 				</input>
 			</div>
 			<div class="col-md-2" align="center">
-				<button
+				<button ng-class="{'disabled': $row.admin_lock}"
 					class="btn btn-default"
 					ng-click="addTranslation($cell, $row, $column)"
 				>

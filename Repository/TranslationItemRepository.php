@@ -26,7 +26,6 @@ class TranslationItemRepository extends EntityRepository
 			i.lang LIKE :lang  
 		';
 
-		if (!$showAll) $dql .= 'AND i.isAdminLocked = :adminLocked';
 		$dql .= ' ORDER BY i.key';
 
         $query = $this->_em->createQuery($dql);
@@ -34,8 +33,6 @@ class TranslationItemRepository extends EntityRepository
         $query->setParameter('bundle', $bundle);
         $query->setParameter('commit', $commit); 
         $query->setParameter('lang', $lang);
-
-        if (!$showAll) $query->setParameter('adminLocked', false);
 
         return $query->getResult();
 	}
@@ -59,7 +56,6 @@ class TranslationItemRepository extends EntityRepository
 			)
 		';
 
-		if (!$showAll) $dql .= 'AND i.isAdminLocked = :adminLocked';
 		$dql .= ' ORDER BY i.key';
 
         $query = $this->_em->createQuery($dql);
@@ -68,9 +64,6 @@ class TranslationItemRepository extends EntityRepository
         $query->setParameter('commit', $commit);
         $query->setParameter('lang', $lang);
         $query->setParameter('search', "%{$search}%");
-
-        if (!$showAll) $query->setParameter('adminLocked', false);
-
 
         return $query->getResult();
 	}

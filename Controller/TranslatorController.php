@@ -112,7 +112,16 @@ class TranslatorController extends Controller
         $value  = $this->get('request')->request->get('translation');
         $translationItem = $this->get('request')->request->get('translation_item');
         $translationItem = $translationManager->find($translationItem);
-        $translation = $translationManager->addTranslation($translationItem, $value);
+
+        if ($translationItem->isAdminLocked()) {
+            return new JsonResponse();
+        }
+
+        $translations = $translationItem->getTranslations();
+
+        $translation = ($translations[0]->getTranslation() !== $value) ?
+            $translationManager->addTranslation($translationItem, $value):
+            $translations[0];
 
         $context = new SerializationContext();
         $context->setGroups('translator');

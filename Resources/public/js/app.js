@@ -93,6 +93,15 @@ gitTranslator.controller('contentCtrl', function(
 
 		if (type === 'current' ) {
 			$scope.translations = translations;
+
+			for (var i = 0; i < $scope.translations.length; i++) {
+				//console.log($scope.translations[i]);
+				if ($scope.translations[i].admin_lock) {
+					console.log("admin lock for ", $scope.translations[i]);
+					$scope.translations.splice(i, 1);
+				}
+			}
+
 		} else {
 			$scope.preferedTranslations = translations;
 		}
@@ -178,6 +187,22 @@ gitTranslator.controller('contentCtrl', function(
 			}		
 		}
 	}
+
+	var findById = function(type, key) {
+		if (type === 'current') {
+			for (var i = 0; i < $scope.translations.length; i++) {
+				if ($scope.translations[i].key === key) {
+					return $scope.translations[i];
+				}
+			}
+		} else {
+			for (var i = 0; i < $scope.preferedTranslations.length; i++) {
+				if ($scope.preferedTranslations[i].key === key) {
+					return $scope.preferedTranslations[i];
+				}	
+			}
+		}
+	}
 	
 	loadTranslations('current');  
 	loadTranslations('prefered'); 
@@ -254,11 +279,20 @@ gitTranslator.controller('contentCtrl', function(
 	}
 
 	$scope.getPreferedTranslation = function(cell, row, col) {
+
+		var item = findById('prefered', row.key);
+
+		return (item !== undefined) ?
+			item.translations[0].translation:
+			'not found';
+
+		/* Idexed way of doing it... wich won't work because js doesn't know what an indexed array is.
 		var idx = $scope.translations.indexOf(row);
 
 		return (typeof $scope.preferedTranslations[idx] !== 'undefined') ?
 			$scope.preferedTranslations[idx].translations[0].translation:
 			'not found';
+		*/
 	}
 
 	$scope.loadTranslations = function() {
