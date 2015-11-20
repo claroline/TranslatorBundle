@@ -1,5 +1,6 @@
 ## Initialisation
 Set a github username in the package administration panel for this bundle.
+Go at the platform root and run "mkdir git".
 ## Commands
 These commands will fetch sources from the vendor you pick, and push on the fork of your github username.
 ### Repository initialization
