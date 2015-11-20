@@ -9,7 +9,7 @@
         "claroline/core-bundle": "~6.0",
         "claroline/forum-bundle": "~6.0",
         "claroline/angular-data-table-bundle": "*",
-        "claroline/dev-bundle": "*"
+        "claroline/dev-bundle": "dev-master"
     },
     "autoload": {
         "psr-0": { "Claroline\\TranslatorBundle": "" }
