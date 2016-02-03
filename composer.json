@@ -5,14 +5,13 @@
     "type": "claroline-plugin",
     "license": "GPL-3.0+",
     "require": {
-        "php": ">=5.4.1",
+        "php": ">=5.5",
         "claroline/core-bundle": "~6.0",
         "claroline/forum-bundle": "~6.0",
         "claroline/angular-data-table-bundle": "*",
         "claroline/dev-bundle": "dev-master"
     },
     "autoload": {
-        "psr-0": { "Claroline\\TranslatorBundle": "" }
-    },
-    "target-dir": "Claroline/TranslatorBundle"
+        "psr-4": { "Claroline\\TranslatorBundle\\": "" }
+    }
 }
