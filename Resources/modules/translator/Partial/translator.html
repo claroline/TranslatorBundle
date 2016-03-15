@@ -1,0 +1,145 @@
+<div>
+    <div class="col-md-2 panel-group">
+        <div class="panel-body">
+            <button 
+                data-ng-repeat="available in tc.langs" 
+                class="label label-default btn btn-default"
+                data-lang="{{ available }}"
+                ng-click="tc.setLang(available)"
+                ng-class="{'active': tc.lang == available}"
+            >
+                {{ available }}
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="list-group">
+                <a class="list-group-item" data-ng-repeat="(key, value) in tc.repositories" 
+                    ng-click="tc.setRepository(value)"
+                    href="#"
+                    ng-class="{'active': key == tc.repository}"
+                >
+                    {{ key }}
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-10 panel-group">
+        <div class="container panel-body">
+            <div align="center">
+                <div class="input-group">
+                    <input 
+                        class="form-control" 
+                        type="text" 
+                        id="search-items-txt" 
+                        ng-model="tc.search"
+                        placeholder="" 
+                        value=""
+                    >
+                    </input>
+                    <span class="input-group-btn">
+                        <button 
+                            class="filter btn btn-default" 
+                            type="button" 
+                            ng-click="tc.loadTranslations()"   
+                            id="search-button">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </span>
+                </div> 
+            </div>
+        </div>
+        <div class="panel-body">
+            <dtable 
+                options="tc.dataTableOptions" 
+                rows="tc.translations" 
+                class="material" 
+                on-page="tc.paging(offset, size)"
+            >   
+                <column name='Translation'>
+                    <div>
+                        <div class="col-md-1" align="center">
+                            <a class="btn btn-default"
+                                role="button"
+                                data-toggle="collapse"
+                                href="#collapse{{ $row.id }}"
+                                aria-controls="collapse{{ $row.id }}"
+                                aria-expanded="true"
+                            >
+                                <i class="fa fa-sort-desc"></i>
+                            </a>
+                            <a
+                                class="btn btn-default"
+                                role="button"
+                                data-toggle="collapse"
+                                href="#info{{ $row.id }}"
+                                aria-controls="info{{ $row.id }}"
+                                aria-expanded="true"
+                                ng-click="tc.loadInfos($row)"
+                            >
+                                <i class="fa fa-info-circle"></i>
+                            </a>
+                        </div>
+                        <div class="col-md-9">
+                            <input 
+                                type="text" 
+                                value="{{ $row.translations[0].translation }}"
+                                class="form-control"
+                                ng-model=$row.translations[0].translation
+                                ng-model-options="{ debounce: 1000 }"
+                            >
+                            </input>
+                        </div>
+                        <div class="col-md-2" align="center">
+                            <button ng-class="{'disabled': $row.admin_lock}"
+                                class="btn btn-default"
+                                ng-click="tc.addTranslation($cell, $row, $column)"
+                            >
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button
+                                class="btn btn-default"
+                                ng-click="comment($row)"
+                            >
+                                <i class="fa fa-comment"></i>
+                            </button>
+                            <button class="btn btn-default" ng-click="tc.clickUserLock($row)">
+                                <i ng-class="{'fa fa-check': !$row.user_lock, 'fa fa-close':$row.user_lock}"></i>
+                            </button>
+                            <button ng-if="isAdmin" class="btn btn-default" ng-click="tc.clickAdminLock($row)">
+                                <i ng-class="{'fa fa-unlock': !$row.admin_lock,'fa fa-lock':$row.admin_lock}"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse" style="clear: left;" id="collapse{{ $row.id }}">
+                        {{ tc.getPreferedTranslation($cell, $row, $column) }}
+                    </div>
+                    <div class="collapse" style="clear: left;" id="info{{ $row.id }}">
+                        {{ 'identifier'|trans:{id: $row.domain + $row.key}:'translator' }}
+                        </br>
+                        {{ 'translation_history'|trans:{}:'translator' }}
+                            <ul ng-repeat="translationInfo in translationInfos[$row.id]"> 
+                                <li ng-repeat="translation in translationInfo.translations">
+                                    {{ 'translation_message'|trans:{translation: translation.translation, author: translation.author, date: translation.creation_date}:'translator' }}
+                                </li>
+                            </ul>
+                    </div>
+                </column>
+            </dtable>
+        </div>
+        <div class="panel-body">
+            <div class="locale-list">
+                {{ 'compare_with'|trans:{}:'translator' }}
+
+                <button 
+                    data-ng-repeat="lang in tc.langs" 
+                    class="label label-default btn btn-default" 
+                    data-lang="{{ lang }}"
+                    ng-click="tc.setPreferedLang(lang)"
+                    ng-class="{'active': lang == tc.preferedLang}"
+                >
+                    {{ lang }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
