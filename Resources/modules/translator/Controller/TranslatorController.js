@@ -206,7 +206,7 @@ export default class TranslatorController {
 	}
 
 	loadInfos(row) {
-		this.TranslatorAPIService.translationsInfo(this.lang, row.vendor, row.bundle, row.domain, row.key).then(function(d) {
+		this.TranslatorAPIService.translationsInfo(this.lang, row.vendor, row.bundle, row.domain, row.key).then(d => {
 			this.translationInfos[row.id] = d.data;
 		});
 	}
