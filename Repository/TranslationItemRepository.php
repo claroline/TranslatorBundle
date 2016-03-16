@@ -18,13 +18,17 @@ class TranslationItemRepository extends EntityRepository
 {
 	public function findLastTranslations($vendor, $bundle, $commit, $lang, $showAll = true)
 	{
+
 		$dql = 'SELECT i, t FROM Claroline\TranslatorBundle\Entity\TranslationItem i
 			LEFT JOIN i.translations t
 			WHERE i.vendor LIKE :vendor AND
 			i.bundle LIKE :bundle AND
 			i.commit LIKE :commit AND
-			i.lang LIKE :lang  
-		';
+			i.lang LIKE :lang';
+
+		if (!$showAll) {
+			$dql .= ' AND i.isAdminLocked = false';
+		}
 
 		$dql .= ' ORDER BY i.key';
 
@@ -44,7 +48,7 @@ class TranslationItemRepository extends EntityRepository
 			WHERE i.vendor LIKE :vendor AND
 			i.bundle LIKE :bundle AND
 			i.commit LIKE :commit AND
-			i.lang LIKE :lang AND 
+			i.lang LIKE :lang AND
 			(
 				t.translation LIKE :search OR 
 				i.key LIKE :search
@@ -55,6 +59,10 @@ class TranslationItemRepository extends EntityRepository
 				AND i2.id = i.id
 			)
 		';
+
+		if (!$showAll) {
+			$dql .= ' AND i.isAdminLocked = false';
+		}
 
 		$dql .= ' ORDER BY i.key';
 

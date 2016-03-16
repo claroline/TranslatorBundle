@@ -105,7 +105,7 @@
                             <button class="btn btn-default" ng-click="tc.clickUserLock($row)">
                                 <i ng-class="{'fa fa-check': !$row.user_lock, 'fa fa-close':$row.user_lock}"></i>
                             </button>
-                            <button ng-if="isAdmin" class="btn btn-default" ng-click="tc.clickAdminLock($row)">
+                            <button ng-if="tc.isAdmin" class="btn btn-default" ng-click="tc.clickAdminLock($row)">
                                 <i ng-class="{'fa fa-unlock': !$row.admin_lock,'fa fa-lock':$row.admin_lock}"></i>
                             </button>
                         </div>
