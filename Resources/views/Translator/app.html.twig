@@ -14,80 +14,22 @@
 {% endblock %}
 
 {% block content %}
-    <div id="translator-panel" class="panel panel-default" ng-app="gitTranslator">
-        <div class="panel-body" ng-controller="contentCtrl">
-            <div class="col-md-2 panel-group">
-                <div class="panel-body">
-                    <locales align="center" class="locale-list">
-                    </locales>
-                </div>
-                <div class="panel-body">
-                    <repositories class="list-group">
-                    </repositories>
-                </div>
-            </div>
-            <div class="col-md-10 panel-group">
-                <div class="container panel-body">
-                    <div align="center">
-                        <searchbar>
-                        </searchbar>   
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <translations>
-                    </translations>
-                </div>
-                <div class="panel-body">
-                    <preferedlang class="locale-list">
-                    </preferedlang>
-                </div>
-            </div>
+    <div id="translator-panel" class="panel panel-default" ng-app="GitTranslator">
+        <div class="panel-body">
+            <translator></translator>
         </div>
     </div>
 {% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
-    <link 
-        rel="stylesheet" 
-        href="{{ asset('bundles/clarolineangulardatatable/js/release/dataTable.css') }}"
-    />
-    <link 
-        rel="stylesheet" 
-        href="{{ asset('bundles/clarolineangulardatatable/js/release/material.css') }}"
-    />
     <link href="http://fontastic.s3.amazonaws.com/Jnf54BZCm7mSjGCxNRbfp3/icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('vendor/angular-ui.css')}}"> </link>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script type="text/javascript" src="{{ url('bazinga_jstranslation_js', {domain: 'translator'}) }}"></script>
-
-    {# Angular JS #}
-    {% javascripts debug=false filter='jsmin' output='vendor/claroline/js/angular.js'
-        '@InnovaAngularJSBundle/Resources/public/js/angular.min.js'
-        '@InnovaAngularJSBundle/Resources/public/js/angular-sanitize.min.js'
-        '@InnovaAngularJSBundle/Resources/public/js/angular-route.min.js'
-        '@InnovaAngularJSBundle/Resources/public/js/angular-resource.min.js'
-        '@InnovaAngularJSBundle/Resources/public/js/angular-touch.min.js'
-    %}
-    <script type="text/javascript" src="{{ asset_url }}"></script>
-    {% endjavascripts %}
-
-    {# Angular UI #}
-    {% javascripts debug=false filter='jsmin' output='vendor/angular/angular-ui.js'
-        '@InnovaAngularUIBootstrapBundle/Resources/public/js/*'
-        '@InnovaAngularUITreeBundle/Resources/public/js/*'
-        '@InnovaAngularUIPageslideBundle/Resources/public/js/*'
-        '@InnovaAngularUITinyMCEBundle/Resources/public/js/*'
-        '@InnovaAngularUITranslationBundle/Resources/public/js/*'
-        '@InnovaAngularUIResourcePickerBundle/Resources/public/js/*'
-    %}
-    <script type="text/javascript" src="{{ asset_url }}"></script>
-    {% endjavascripts %}
-
-    <script type="text/javascript" src="{{ asset('bundles/clarolineangulardatatable/js/release/dataTable.helpers.min.js') }}">
-    </script>
 
     {# Set some vars needed by Angular parts #}
     <script type="text/javascript">
@@ -96,10 +38,9 @@
         {% if not isAdmin %} {% set isAdmin = 0 %} {% endif %}
 
         var AngularApp = {};
-        AngularApp.webDir        = "{{ asset('') }}";
         AngularApp.locale        = "{{ app.request.locale ~ '_' ~ app.request.locale|upper }}";
         AngularApp.isAdmin       = {{ isAdmin }};
     </script>
 
-    <script type="text/javascript" src={{ asset('bundles/clarolinetranslator/js/app.js') }}></script>
+    <script type="text/javascript" src={{ hotAsset('dist/claroline-translator-translator.js') }}></script>
 {% endblock %}

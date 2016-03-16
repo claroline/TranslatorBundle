@@ -1,0 +1,7 @@
+{
+  "webpack": {
+    "entry": {
+      "translator": "modules/translator/module"
+    }
+  }
+}
