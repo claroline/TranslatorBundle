@@ -40,7 +40,7 @@
                         <button 
                             class="filter btn btn-default" 
                             type="button" 
-                            ng-click="tc.loadTranslations()"   
+                            ng-click="tc.loadTranslations('current')"   
                             id="search-button">
                             <i class="fa fa-search"></i>
                         </button>
@@ -98,7 +98,7 @@
                             </button>
                             <button
                                 class="btn btn-default"
-                                ng-click="comment($row)"
+                                ng-click="tc.comment($row)"
                             >
                                 <i class="fa fa-comment"></i>
                             </button>

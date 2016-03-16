@@ -192,9 +192,9 @@ export default class TranslatorController {
 			'translation': row.translations[0].translation
 		};
 
-		cacheRow(row);
+		this.cacheRow(row);
 
-		promise = this.$http.post(Routing.generate('claroline_translator_add_translation'), data).then(d => {
+		this.$http.post(Routing.generate('claroline_translator_add_translation'), data).then(d => {
 			const myEl = angular.element(document.querySelector('#translator-panel'));
 			myEl.prepend(alertSuccess);  
 		})
@@ -219,7 +219,7 @@ export default class TranslatorController {
 	}
 
 	clickUserLock(row) {
-		TranslatorAPIService.clickUserLock(row.id).then(d => {
+		this.TranslatorAPIService.clickUserLock(row.id).then(d => {
 			row.user_lock = !row.user_lock;
 			this.cacheRow(row);
 		});
