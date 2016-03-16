@@ -117,7 +117,7 @@
                         {{ 'identifier'|trans:{id: $row.domain + $row.key}:'translator' }}
                         </br>
                         {{ 'translation_history'|trans:{}:'translator' }}
-                            <ul ng-repeat="translationInfo in translationInfos[$row.id]"> 
+                            <ul ng-repeat="translationInfo in tc.translationInfos[$row.id]"> 
                                 <li ng-repeat="translation in translationInfo.translations">
                                     {{ 'translation_message'|trans:{translation: translation.translation, author: translation.author, date: translation.creation_date}:'translator' }}
                                 </li>
