@@ -24,7 +24,6 @@
 {% block stylesheets %}
     {{ parent() }}
     <link href="http://fontastic.s3.amazonaws.com/Jnf54BZCm7mSjGCxNRbfp3/icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('vendor/angular-ui.css')}}"> </link>
 {% endblock %}
 
 {% block javascripts %}
@@ -38,8 +37,8 @@
         {% if not isAdmin %} {% set isAdmin = 0 %} {% endif %}
 
         var AngularApp = {};
-        AngularApp.locale        = "{{ app.request.locale ~ '_' ~ app.request.locale|upper }}";
-        AngularApp.isAdmin       = {{ isAdmin }};
+        AngularApp.locale  = "{{ app.request.locale ~ '_' ~ app.request.locale|upper }}";
+        AngularApp.isAdmin = {{ isAdmin }};
     </script>
 
     <script type="text/javascript" src={{ hotAsset('dist/claroline-translator-translator.js') }}></script>

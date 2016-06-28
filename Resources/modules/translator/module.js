@@ -8,7 +8,7 @@ import TranslatorController from './Controller/TranslatorController'
 import TranslatorDirective from './Directive/TranslatorDirective'
 import TranslatorAPIService from './Service/TranslatorAPIService'
 
-import config from '../../../../../claroline/core-bundle/Resources/modules/interceptorsDefault'
+import config from '#/main/core/Resources/modules/interceptorsDefault'
 
 angular.module('GitTranslator', ['data-table', 'ui.bootstrap', 'ui.translation'])
    .service('TranslatorAPIService', TranslatorAPIService)

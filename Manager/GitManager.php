@@ -37,28 +37,27 @@ class GitManager
      * })
      */
     public function __construct(
-        $gitDirectory, 
+        $gitDirectory,
         TranslationManager $translationManager,
         $gitConfig,
         $repositories,
         $om,
         $devTranslator,
         $ch
-    )
-    {
-        $this->gitDirectory       = $gitDirectory;
+    ) {
+        $this->gitDirectory = $gitDirectory;
         $this->translationManager = $translationManager;
-        $this->gitConfig          = $gitConfig;
-        $this->repositories       = $repositories;
-        $this->om                 = $om;
-        $this->repo               = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
-        $this->devTranslator      = $devTranslator;
-        $this->ch                 = $ch;
+        $this->gitConfig = $gitConfig;
+        $this->repositories = $repositories;
+        $this->om = $om;
+        $this->repo = $om->getRepository('ClarolineTranslatorBundle:TranslationItem');
+        $this->devTranslator = $devTranslator;
+        $this->ch = $ch;
     }
 
     public function pull($vendor, $bundle)
     {
-        $workingDir = $this->gitDirectory . $vendor . $bundle;
+        $workingDir = $this->gitDirectory.$vendor.$bundle;
         chdir($workingDir);
         $this->log($command);
         exec('git pull origin master');
@@ -66,79 +65,87 @@ class GitManager
         $this->translationManager->pull($vendor, $bundle);
     }
 
-    public function commit($vendor, $bundle) {
+    public function commit($vendor, $bundle)
+    {
         //build new files from the database;
         $items = $this->repo->findBy(array(
                 'vendor' => $vendor,
                 'bundle' => $bundle,
-                'commit' => $this->translationManager->getCurrentCommit($vendor . $bundle)
+                'commit' => $this->translationManager->getCurrentCommit($vendor.$bundle),
             )
         );
 
-        $commit = $this->translationManager->getCurrentCommit($vendor . $bundle);
-        $this->log('Commiting ' . count($items) . ' translations...');
+        $commit = $this->translationManager->getCurrentCommit($vendor.$bundle);
+        $this->log('Commiting '.count($items).' translations...');
         $data = $this->serializeForCommit($items);
         $this->buildFilesToCommit($data, $vendor, $bundle);
-        $workingDir = $this->gitDirectory . $vendor . $bundle;
-        $branch = 'translations-' . $commit;
+        $workingDir = $this->gitDirectory.$vendor.$bundle;
+        $branch = 'translations-'.$commit;
         chdir($workingDir);
-        $this->log('git checkout ' . $branch);
-        exec('git checkout ' . $branch);
-        $this->log('git add .');        
+        $this->log('git checkout '.$branch);
+        exec('git checkout '.$branch);
+        $this->log('git add .');
         exec('git add .');
         $this->log('git commit -m "translations from claroline.net"');
         exec('git commit -m "translations from claroline.net"');
-        $this->log('git push origin ' . $branch);
-        exec('git push origin ' . $branch);
+        $this->log('git push origin '.$branch);
+        exec('git push origin '.$branch);
     }
 
     public function init($vendor, $bundle)
-    {
+    {/*
         if ($this->exists($vendor, $bundle)) {
-            $this->log('Cannot initialize ' . $vendor . $bundle . ': directory already exists.', LogLevel::DEBUG);
+            $this->log('Cannot initialize '.$vendor.$bundle.': directory already exists.', LogLevel::DEBUG);
 
             return false;
-        } 
+        }
 
-        $this->addRepository($vendor, $bundle);     
-        $workingDir = $this->gitDirectory . $vendor . $bundle;
-        $repo = 'https://github.com/' . $vendor . '/' . $bundle .'.git';
+        $this->addRepository($vendor, $bundle);
+        $workingDir = $this->gitDirectory.$vendor.$bundle;
+        $repo = 'https://github.com/'.$vendor.'/'.$bundle.'.git';
         $fs = new FileSystem();
-        $this->log('Initialize ' . $vendor . ' ' . $bundle . '...');
+        $this->log('Initialize '.$vendor.' '.$bundle.'...');
         $this->log('Setting up git...');
-        exec('git init ' . $workingDir);          
-        $this->log('git init ' . $workingDir);
-        $this->log('Change dir to ' . $workingDir);
+        exec('git init '.$workingDir);
+        $this->log('git init '.$workingDir);
+        $this->log('Change dir to '.$workingDir);
         chdir($workingDir);
-        $this->log('git remote add -f origin ' . $repo);
-        exec('git remote add -f origin ' . $repo);
+
+        $modules = ($bundle === 'Distribution') ? $this->translationManager->getDistributionModules($workingDir) : [''];
+
+        $this->log('git remote add -f origin '.$repo);
+        exec('git remote add -f origin '.$repo);
         $this->log('git config core.sparseCheckout true');
         exec('git config core.sparseCheckout true');
         $this->log('git config core.filemode false');
         exec('git config core.filemode false');
-        $this->log('echo Resource/translations/* >> .git/info/sparse-checkout');
-        exec('echo Resources/translations/* >> .git/info/sparse-checkout');
+
+        foreach ($modules as $module) {
+            $this->log("echo {$module}/Resource/translations/* >> .git/info/sparse-checkout");
+            exec("echo {$module}/Resources/translations/* >> .git/info/sparse-checkout");
+        }
+
         $this->log('git pull --depth=1 origin master');
         exec('git pull --depth=1 origin master');
-        $this->log('Git was set up for ' . $vendor . $bundle . '.');
-        $commit = $this->translationManager->getCurrentCommit($vendor . $bundle);
-        $this->log('git checkout -b translations-' . $commit);
-        exec('git checkout -b translations-' . $commit);
-        $cmd = 'git remote set-url origin https://github.com/' .
-            $this->ch->getParameter('translator_git_username') .
-            '/' . $bundle . '.git --push';
+        $this->log('Git was set up for '.$vendor.$bundle.'.');
+        $commit = $this->translationManager->getCurrentCommit($vendor.$bundle);
+        $this->log('git checkout -b translations-'.$commit);
+        exec('git checkout -b translations-'.$commit);
+        $cmd = 'git remote set-url origin https://github.com/'.
+            $this->ch->getParameter('translator_git_username').
+            '/'.$bundle.'.git --push';
         $this->log($cmd);
         exec($cmd);
-
+*/
         //set the translations for each supported languages
         $this->translationManager->init($vendor, $bundle);
     }
 
-    public function remove($vendor, $bundle) 
+    public function remove($vendor, $bundle)
     {
         $fs = new FileSystem();
-        $workingDir = $this->gitDirectory . $vendor . $bundle;
-        $this->log('Removing ' . $workingDir . '...', LogLevel::DEBUG);
+        $workingDir = $this->gitDirectory.$vendor.$bundle;
+        $this->log('Removing '.$workingDir.'...', LogLevel::DEBUG);
         $fs->rmdir($workingDir, true);
         $this->translationManager->clear($vendor, $bundle);
         $this->removeRepository($vendor, $bundle);
@@ -146,7 +153,7 @@ class GitManager
 
     public function exists($vendor, $bundle)
     {
-        if (is_dir($this->gitDirectory . $vendor . $bundle)) {
+        if (is_dir($this->gitDirectory.$vendor.$bundle)) {
             return true;
         }
 
@@ -173,12 +180,14 @@ class GitManager
 
     public function addRepository($vendor, $bundle)
     {
-        $repositories = file_exists($this->repositories) ? Yaml::parse($this->repositories): array();
-        if ($repositories === true) $configs = array();
-        $repositories[$vendor . $bundle] = array($vendor => $bundle);
+        $repositories = file_exists($this->repositories) ? Yaml::parse($this->repositories) : array();
+        if ($repositories === true) {
+            $configs = array();
+        }
+        $repositories[$vendor.$bundle] = array($vendor => $bundle);
 
         if (!file_put_contents($this->repositories, Yaml::dump($repositories, 2))) {
-            $this->log("Couldn't add git config in " . $this->repositories . " !!!", LogLevel::DEBUG);
+            $this->log("Couldn't add git config in ".$this->repositories.' !!!', LogLevel::DEBUG);
         }
     }
 
@@ -189,44 +198,44 @@ class GitManager
 
     public function getRepositories()
     {
-        return file_exists($this->repositories) ? Yaml::parse($this->repositories): array();
+        return file_exists($this->repositories) ? Yaml::parse($this->repositories) : array();
     }
 
     private function buildFilesToCommit($domains, $vendor, $bundle)
     {
         foreach ($domains as $domainName => $domain) {
             foreach ($domain as $lang => $translations) {
-                $fileName = $domainName . '.' . $lang . '.yml';
+                $fileName = $domainName.'.'.$lang.'.yml';
                 $els = array();
 
                 foreach ($translations as $key => $value) {
                     preg_match_all('/\[([^]]+)\]/', $key, $matches, PREG_SET_ORDER);
-                    $els[] = $this->recursiveParseKeys($matches, $value); 
+                    $els[] = $this->recursiveParseKeys($matches, $value);
                 }
 
                 $datadump = $this->recursiveMergeTranslations($els);
                 $yaml = Yaml::dump($datadump, 2);
                 file_put_contents(
-                    $this->translationManager->getTranslationsDirectory($vendor . $bundle) . '/' . $fileName,
+                    $this->translationManager->getTranslationsDirectory($vendor.$bundle).'/'.$fileName,
                     $yaml
                 );
             }
         }
     }
 
-    private function serializeForCommit(array $items) 
+    private function serializeForCommit(array $items)
     {
         $data = [];
 
         foreach ($items as $item) {
             $translations = $item->getTranslations();
-            $data[$item->getDomain()][$item->getLang()][$item->getKey()] = $translations[0]->getTranslation(); 
+            $data[$item->getDomain()][$item->getLang()][$item->getKey()] = $translations[0]->getTranslation();
         }
-        
+
         return $data;
     }
 
-    /* 
+    /*
      * Returns a translation element like this: array(key1 => array(key2 => ... value))
      * because translations can be stored as array in different namespaces an makes evertything
      * much more complicated for me. This way we can sort of get the "namespace"
@@ -235,17 +244,16 @@ class GitManager
      */
     private function recursiveParseKeys($keys, $value, $el = array(), $depth = 0)
     {
-        $el[$keys[$depth][1]] = (++$depth < count($keys)) ? 
+        $el[$keys[$depth][1]] = (++$depth < count($keys)) ?
             $this->recursiveParseKeys(
-                $keys, 
-                $value, 
-                $el[$keys[$depth][1]], 
+                $keys,
+                $value,
+                $el[$keys[$depth][1]],
                 $depth
-            ):
+            ) :
             $value;
 
         return $el;
-
     }
 
     /*
